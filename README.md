@@ -234,12 +234,30 @@ verte et branches à jour avant fusion.
 
 ## Déploiement
 
-Le Compose de production, le Caddyfile et le workflow CD sont prêts (étape 7).
-La procédure complète de mise en production, de publication `ghcr.io`, de
-déploiement SSH, de durcissement VPS et de rollback est documentée dans
-[`docs/DEPLOIEMENT.md`](docs/DEPLOIEMENT.md). En résumé : push sur `main` → CI →
+Le Compose de production, le Caddyfile, le workflow CD et la supervision sont
+prêts. La procédure complète de mise en production, de publication `ghcr.io`,
+de déploiement SSH, de durcissement VPS, de rollback et de supervision est
+documentée dans [`docs/DEPLOIEMENT.md`](docs/DEPLOIEMENT.md) et
+[`docs/MONITORING.md`](docs/MONITORING.md). En résumé : push sur `main` → CI →
 images publiées sur `ghcr.io` → déploiement sur le VPS → healthcheck → rollback
-automatique en cas d'échec.
+automatique en cas d'échec. La disponibilité est surveillée par Uptime Kuma.
+
+## Supervision
+
+La production est surveillée par Uptime Kuma, exposé uniquement en local sur le
+VPS et accessible par tunnel SSH. Les moniteurs couvrent le site et
+`/api/health/`. La procédure d’incident et de sauvegarde est dans
+[`docs/MONITORING.md`](docs/MONITORING.md).
+
+## Documentation
+
+| Document | Contenu |
+| --- | --- |
+| [docs/CI.md](docs/CI.md) | Workflow CI, seuils, sécurité, protection de branche |
+| [docs/DEPLOIEMENT.md](docs/DEPLOIEMENT.md) | Mise en production, SSH, rollback |
+| [docs/MONITORING.md](docs/MONITORING.md) | Uptime Kuma, alertes, incident |
+| [docs/CHECKLIST.md](docs/CHECKLIST.md) | Checklist de livraison |
+| [docs/adr/](docs/adr/) | Décisions d’architecture |
 
 ## Feuille de route
 
