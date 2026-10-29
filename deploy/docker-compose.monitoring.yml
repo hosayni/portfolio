@@ -27,6 +27,7 @@ services:
       - "127.0.0.1:3001:3001"
     volumes:
       - uptime_kuma_data:/app/data
+    user: "1000:1000"
     security_opt:
       - no-new-privileges:true
     cap_drop:

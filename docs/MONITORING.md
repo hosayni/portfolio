@@ -34,6 +34,15 @@ docker compose -f docker-compose.monitoring.yml up -d
 docker compose -f docker-compose.monitoring.yml ps
 ```
 
+Si Uptime Kuma affiche `EACCES: permission denied`, corriger le volume :
+
+```bash
+docker run --rm -v portfolio-monitoring_uptime_kuma_data:/data alpine chown -R 1000:1000 /data
+cd /opt/portfolio
+docker compose -f docker-compose.monitoring.yml down
+docker compose -f docker-compose.monitoring.yml up -d
+```
+
 Uptime Kuma est exposé uniquement sur `127.0.0.1:3001`. Accès :
 
 ```bash

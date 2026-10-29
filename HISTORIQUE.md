@@ -684,3 +684,171 @@ README.md                             # statut étape 9
 - Les healthchecks Docker existants restent la première ligne de défense.
 - Une sonde externe gratuite peut compléter Uptime Kuma pour détecter une
   panne totale du VPS.
+
+## Étape 10 — Documentation finale et checklist de livraison
+
+### Résumé
+
+Finalisation de la documentation : checklist de livraison complète, mise à jour
+du README (état terminé, feuille de route complète), mise à jour de
+`HISTORIQUE.md`, référencement de `docs/MONITORING.md` et `docs/CHECKLIST.md`.
+
+### Fichiers
+
+```text
+docs/CHECKLIST.md              # checklist de livraison
+README.md                      # état terminé, roadmap complète
+HISTORIQUE.md                  # étape 10 consignée
+```
+
+### Vérifications finales
+
+- Documentation cohérente avec l’état réel du dépôt.
+- Toutes les étapes 1 à 10 sont marquées terminées.
+- Limites assumées documentées.
+
+### État final
+
+Projet livré : site Astro/Flask déployé sur VPS, supervisé, documenté, avec CI/CD,
+SEO, performance, sécurité et monitoring. Contenu rédactionnel à compléter selon
+les placeholders `[À COMPLÉTER]`.
+
+## Contexte pour développement futur
+
+### Vue d’ensemble
+
+Portfolio professionnel bilingue FR/EN de Mohamed Hosayni, déployé sur VPS,
+supervisé et documenté. Le site est statique (Astro), l’API dynamique est Flask.
+Le déploiement est automatisé par GitHub Actions vers `ghcr.io`, puis sur le VPS
+par SSH avec rollback automatique.
+
+### Stack et versions
+
+- Frontend : Astro `5.18.2`, TypeScript `5.9.3`, Tailwind `4.3.3`, Vite `6.4.5`
+- Backend : Python `3.12`, Flask `3.1.3`, Gunicorn `26.2.0`
+- Tests frontend : Playwright `1.64.1`
+- Lighthouse CI : `0.15.1`
+- API audit : pip-audit `2.10.1`
+- Docker : node `22.22-alpine3.24`, nginx `1.30.6-alpine3.24`, python `3.12.16-slim-trixie`, caddy `2.11.7-alpine`
+- Reverse proxy : Caddy avec TLS automatique
+- Monitoring : Uptime Kuma `2.2.1`
+
+### Structure
+
+```text
+portfolio/
+├── web/                 # Astro : site public
+├── api/                 # Flask : API
+├── deploy/              # Compose prod, Caddyfile, .env.example, deploy.sh, monitoring
+├── docs/                # CI, déploiement, monitoring, checklist, ADR
+├── .github/workflows/   # ci.yml, deploy.yml
+├── HISTORIQUE.md
+└── README.md
+```
+
+### Commandes essentielles
+
+Frontend :
+
+```bash
+cd web
+npm ci
+npm run dev
+npm run check
+npm run lint
+npm run format:check
+npm run build
+npm run test:e2e
+```
+
+API :
+
+```bash
+cd api
+python3 -m venv .venv
+.venv/bin/pip install -r requirements-dev.txt
+.venv/bin/flask --app wsgi run --port 8000
+.venv/bin/ruff check .
+.venv/bin/ruff format --check .
+.venv/bin/pytest
+```
+
+Docker local :
+
+```bash
+docker compose up --build
+```
+
+Production :
+
+```bash
+cd deploy
+docker compose -f docker-compose.prod.yml pull
+docker compose -f docker-compose.prod.yml up -d
+```
+
+Monitoring :
+
+```bash
+cd deploy
+docker compose -f docker-compose.monitoring.yml up -d
+ssh -L 3001:127.0.0.1:3001 deploy@5.189.129.87
+```
+
+### Variables d’environnement
+
+Développement : `.env.example` à la racine.
+
+Production : `deploy/.env.example` à copier en `deploy/.env` avec permissions `600`.
+
+Variables sensibles principales :
+
+- `SECRET_KEY`
+- `GITHUB_TOKEN`
+- `SMTP_*`
+- `CORS_ORIGINS`
+
+Variables importantes :
+
+- `CONTACT_ENABLED=false` tant que SMTP non configuré
+- `PUBLIC_CONTACT_ENABLED=false` dans GitHub Variables tant que SMTP non configuré
+- `SITE_URL=https://hosayni.com`
+- `GHCR_OWNER=hosayni`
+
+### CI/CD
+
+- `ci.yml` : web, e2e, lighthouse, api, security, codeql
+- `deploy.yml` : déclenché par CI verte sur `main`
+- images : `ghcr.io/hosayni/portfolio-web:sha-<commit>` et `portfolio-api:sha-<commit>`
+- rollback automatique via `deploy/deploy.sh`
+
+### Déploiement
+
+- VPS : `5.189.129.87`
+- utilisateur : `deploy`
+- répertoire : `/opt/portfolio`
+- domaine : `hosayni.com` et `www.hosayni.com`
+- Caddy gère TLS automatiquement
+- monitoring : Uptime Kuma sur `127.0.0.1:3001`
+
+### Points d’attention pour la suite
+
+- Le contenu rédactionnel contient des placeholders `[À COMPLÉTER]`.
+- La CSP autorise encore `'unsafe-inline'`.
+- Les exceptions npm Astro 5 expirent le 31 mars 2027.
+- Le cache GitHub et le rate limiting sont en mémoire : un seul worker Gunicorn.
+- Pour activer le contact : configurer SMTP et passer `CONTACT_ENABLED=true` + `PUBLIC_CONTACT_ENABLED=true`.
+- Pour exposer Uptime Kuma publiquement : ajouter un sous-domaine Caddy.
+
+### Fichiers clés
+
+- `web/astro.config.mjs` : configuration Astro, sitemap, i18n
+- `web/src/layouts/BaseLayout.astro` : SEO, hreflang, JSON-LD
+- `api/app/config.py` : configuration et validation production
+- `api/app/__init__.py` : factory Flask
+- `deploy/docker-compose.prod.yml` : stack production
+- `deploy/Caddyfile` : reverse proxy et TLS
+- `deploy/deploy.sh` : déploiement et rollback
+- `docs/DEPLOIEMENT.md` : guide de production
+- `docs/MONITORING.md` : supervision
+- `docs/CHECKLIST.md` : checklist de livraison

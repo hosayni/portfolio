@@ -6,9 +6,7 @@ Portfolio professionnel bilingue (FR/EN), rapide et optimisé pour le référenc
 [![Deploy](https://github.com/hosayni/portfolio/actions/workflows/deploy.yml/badge.svg)](https://github.com/hosayni/portfolio/actions/workflows/deploy.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-> **État du projet :** en construction — étape 7/10 (CD : publication ghcr.io,
-> déploiement SSH automatique, rollback et durcissement VPS documentés).
-> La supervision et la documentation finale sont ajoutées aux étapes suivantes.
+> **État du projet :** terminé — 10/10. Portfolio déployé, supervisé et documenté.
 
 ---
 
@@ -79,7 +77,9 @@ portfolio/
 ├── docs/
 │   ├── adr/                # Journal des décisions d'architecture
 │   ├── CI.md               # Workflow CI, seuils et politique de sécurité
-│   └── DEPLOIEMENT.md      # Mise en production (base, complétée étape 7/10)
+│   ├── DEPLOIEMENT.md      # Mise en production (étape 7)
+│   ├── MONITORING.md       # Supervision Uptime Kuma et procédure d'incident
+│   └── CHECKLIST.md        # Checklist de livraison (étape 10)
 ├── .github/
 │   ├── workflows/ci.yml    # lint, tests, e2e, Lighthouse, sécurité, CodeQL
 │   ├── scripts/            # vérification npm audit avec exceptions datées
@@ -234,12 +234,30 @@ verte et branches à jour avant fusion.
 
 ## Déploiement
 
-Le Compose de production, le Caddyfile et le workflow CD sont prêts (étape 7).
-La procédure complète de mise en production, de publication `ghcr.io`, de
-déploiement SSH, de durcissement VPS et de rollback est documentée dans
-[`docs/DEPLOIEMENT.md`](docs/DEPLOIEMENT.md). En résumé : push sur `main` → CI →
+Le Compose de production, le Caddyfile, le workflow CD et la supervision sont
+prêts. La procédure complète de mise en production, de publication `ghcr.io`,
+de déploiement SSH, de durcissement VPS, de rollback et de supervision est
+documentée dans [`docs/DEPLOIEMENT.md`](docs/DEPLOIEMENT.md) et
+[`docs/MONITORING.md`](docs/MONITORING.md). En résumé : push sur `main` → CI →
 images publiées sur `ghcr.io` → déploiement sur le VPS → healthcheck → rollback
-automatique en cas d'échec.
+automatique en cas d'échec. La disponibilité est surveillée par Uptime Kuma.
+
+## Supervision
+
+La production est surveillée par Uptime Kuma, exposé uniquement en local sur le
+VPS et accessible par tunnel SSH. Les moniteurs couvrent le site et
+`/api/health/`. La procédure d’incident et de sauvegarde est dans
+[`docs/MONITORING.md`](docs/MONITORING.md).
+
+## Documentation
+
+| Document | Contenu |
+| --- | --- |
+| [docs/CI.md](docs/CI.md) | Workflow CI, seuils, sécurité, protection de branche |
+| [docs/DEPLOIEMENT.md](docs/DEPLOIEMENT.md) | Mise en production, SSH, rollback |
+| [docs/MONITORING.md](docs/MONITORING.md) | Uptime Kuma, alertes, incident |
+| [docs/CHECKLIST.md](docs/CHECKLIST.md) | Checklist de livraison |
+| [docs/adr/](docs/adr/) | Décisions d’architecture |
 
 ## Feuille de route
 
@@ -252,7 +270,7 @@ automatique en cas d'échec.
 - [x] **7. CD et VPS** — publication ghcr.io, déploiement, Caddy, durcissement
 - [x] **8. SEO et performance** — JSON-LD, sitemap, RSS, Lighthouse ≥ 95
 - [x] **9. Monitoring** — Uptime Kuma, healthchecks, alertes
-- [ ] **10. Documentation** — guide de déploiement, checklist de livraison
+- [x] **10. Documentation** — guide de déploiement, checklist de livraison
 
 ## Licence
 
