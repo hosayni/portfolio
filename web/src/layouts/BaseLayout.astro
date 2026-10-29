@@ -1,0 +1,159 @@
+---
+import '@/styles/global.css';
+import Footer from '@/components/Footer.astro';
+import Header from '@/components/Header.astro';
+import { defaultLang, languages, type Lang } from '@/i18n/ui';
+import { getAlternates, getLangFromUrl, useTranslations } from '@/i18n/utils';
+
+interface Props {
+  /** Titre de la page, sans le nom du site (ajouté automatiquement). */
+  title: string;
+  description: string;
+  lang?: Lang;
+  /** Chemin absolu ou relatif d'une image Open Graph (1200×630 recommandé). */
+  image?: string;
+  type?: 'website' | 'article';
+  noindex?: boolean;
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+  /** Surcharge des URLs hreflang (utile quand les slugs diffèrent selon la langue). */
+  alternates?: Partial<Record<Lang, string>>;
+}
+
+const {
+  title,
+  description,
+  lang = getLangFromUrl(Astro.url),
+  image,
+  type = 'website',
+  noindex = false,
+  jsonLd,
+  alternates: alternateOverride,
+} = Astro.props;
+
+const t = useTranslations(lang);
+const site = Astro.site ?? new URL('https://hosayni.com');
+const siteName = 'Mohamed Hosayni';
+const fullTitle = title === siteName ? siteName : `${title} | ${siteName}`;
+const canonical = new URL(Astro.url.pathname, site).href;
+
+const alternates = getAlternates(Astro.url.pathname).map(({ lang: code, href }) => ({
+  lang: code,
+  href: alternateOverride?.[code] ?? href,
+}));
+const absoluteAlternates = alternates.map(({ lang: code, href }) => ({
+  code,
+  href: new URL(href, site).href,
+}));
+const defaultHref = absoluteAlternates.find(({ code }) => code === defaultLang)?.href ?? canonical;
+
+const ogImage = image ? new URL(image, site).href : undefined;
+const jsonLdList = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
+const serializedJsonLd = jsonLdList.map((data) => JSON.stringify(data).replace(/</g, '\\u003c'));
+---
+
+<!doctype html>
+<html lang={languages[lang].htmlLang} dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+
+    <!-- Open Graph -->
+    <meta property="og:type" content={type} />
+    <meta property="og:site_name" content={siteName} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content={languages[lang].ogLocale} />
+    {absoluteAlternates
+      .filter(({ code }) => code !== lang)
+      .map(({ code }) => (
+        <meta property="og:locale:alternate" content={languages[code].ogLocale} />
+      ))}
+    {ogImage && <meta property="og:image" content={ogImage} />}
+
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content={ogImage ? 'summary_large_image' : 'summary'} />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    {ogImage && <meta name="twitter:image" content={ogImage} />}
+
+    <!-- Variantes de langue -->
+    {absoluteAlternates.map(({ code, href }) => (
+      <link rel="alternate" hreflang={code} href={href} />
+    ))}
+    <link rel="alternate" hreflang="x-default" href={defaultHref} />
+
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#fbfbf9" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0d0f12" media="(prefers-color-scheme: dark)" />
+
+    {serializedJsonLd.map((data) => (
+      <script type="application/ld+json" is:inline set:html={data} />
+    ))}
+
+    <!--
+      Appliqué avant le premier rendu pour éviter tout flash de thème clair.
+      Ajoute aussi la classe `js`, qui active les animations d'apparition :
+      sans JavaScript, le contenu reste visible.
+    -->
+    <script is:inline>
+      (() => {
+        const root = document.documentElement;
+        root.classList.add('js');
+        try {
+          const stored = localStorage.getItem('theme');
+          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          const dark = stored === 'dark' || (stored !== 'light' && prefersDark);
+          root.dataset.theme = dark ? 'dark' : 'light';
+        } catch {
+          root.dataset.theme = window.matchMedia('(prefers-color-scheme: dark)').matches
+            ? 'dark'
+            : 'light';
+        }
+      })();
+    </script>
+  </head>
+
+  <body class="flex min-h-dvh flex-col">
+    <a class="skip-link" href="#main">
+      {t('a11y.skip')}
+    </a>
+    <Header lang={lang} alternates={alternates} />
+    <main id="main" tabindex="-1" class="flex-1">
+      <slot />
+    </main>
+    <Footer lang={lang} />
+
+    <script is:inline>
+      (() => {
+        const items = document.querySelectorAll('[data-reveal]');
+        if (items.length === 0) return;
+
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reduceMotion || !('IntersectionObserver' in window)) {
+          items.forEach((item) => item.classList.add('is-visible'));
+          return;
+        }
+
+        const observer = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (!entry.isIntersecting) continue;
+              entry.target.classList.add('is-visible');
+              observer.unobserve(entry.target);
+            }
+          },
+          { threshold: 0.05, rootMargin: '0px 0px -10% 0px' },
+        );
+
+        items.forEach((item) => observer.observe(item));
+      })();
+    </script>
+  </body>
+</html>

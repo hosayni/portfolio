@@ -6,7 +6,7 @@ Portfolio professionnel bilingue (FR/EN), rapide et optimisé pour le référenc
 [![Deploy](https://github.com/hosayni/portfolio/actions/workflows/deploy.yml/badge.svg)](https://github.com/hosayni/portfolio/actions/workflows/deploy.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-> **État du projet :** en construction — étape 1/10 (structure du monorepo).
+> **État du projet :** en construction — étape 2/10 (base Astro, layout SEO, i18n FR/EN).
 > Le site public, l'API et le déploiement sont ajoutés aux étapes suivantes (voir la [feuille de route](#feuille-de-route)).
 
 ---
@@ -60,7 +60,7 @@ Principes :
 
 ```text
 portfolio/
-├── web/                    # Astro : site public (à venir, étape 2)
+├── web/                    # Astro : site public (layout SEO, i18n, pages)
 ├── api/                    # Flask : API interne (à venir, étape 4)
 ├── deploy/                 # Compose de production, Caddyfile (étape 7)
 ├── docs/
@@ -76,10 +76,34 @@ portfolio/
 
 ## Démarrage local
 
+### Frontend Astro (disponible)
+
+Prérequis : Node 22 (`nvm use`) et npm 10+.
+
+```bash
+cd web
+npm ci
+npm run dev
+```
+
+Le site est servi sur <http://localhost:4321> et redirige vers `/fr/` ;
+`/en/` sert la version anglaise.
+
+| Commande | Rôle |
+| --- | --- |
+| `npm run dev` | Serveur de développement avec rechargement |
+| `npm run build` | Build statique dans `web/dist/` |
+| `npm run preview` | Sert le build local |
+| `npm run check` | Vérification TypeScript et Astro |
+| `npm run lint` | ESLint |
+| `npm run format` | Prettier (écriture) |
+
+### Stack complète (Docker)
+
 > Disponible à partir de l'étape 5 (Dockerisation). Les commandes ci-dessous seront
 > alors la référence unique pour lancer le projet.
 
-Prérequis : Docker 24+, Docker Compose v2, Node 22 (`.nvmrc`), Python 3.12.
+Prérequis : Docker 24+, Docker Compose v2.
 
 ```bash
 git clone git@github.com:hosayni/portfolio.git
@@ -123,7 +147,7 @@ sur le VPS → healthcheck → rollback automatique en cas d'échec.
 ## Feuille de route
 
 - [x] **1. Initialisation** — dépôt, conventions, structure, documentation de départ
-- [ ] **2. Frontend** — Astro, TypeScript strict, Tailwind, layout SEO, i18n FR/EN, thème
+- [x] **2. Frontend** — Astro 5, TypeScript strict, Tailwind, layout SEO, i18n FR/EN, thème
 - [ ] **3. Pages et contenu** — accueil, projets, compétences, parcours, blog, contact, pages légales
 - [ ] **4. API Flask** — endpoint santé, projets GitHub avec cache, contact validé et limité
 - [ ] **5. Docker** — images multi-stage, nginx, Compose de développement

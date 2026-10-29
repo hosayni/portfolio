@@ -1,0 +1,13 @@
+---
+interface Props {
+  text: string;
+}
+
+const { text } = Astro.props;
+---
+
+<section class="container-page pb-24">
+  <div class="rounded-[20px] border border-dashed border-line p-8 md:p-12" data-reveal>
+    <p class="max-w-[62ch] text-sm leading-relaxed text-muted">{text}</p>
+  </div>
+</section>

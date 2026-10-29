@@ -1,0 +1,110 @@
+---
+import type { Lang } from '@/i18n/ui';
+import { useTranslations } from '@/i18n/utils';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+---
+
+<button
+  id="theme-toggle"
+  type="button"
+  class="icon-btn"
+  aria-label={t('a11y.themeDark')}
+  aria-pressed="false"
+  data-label-dark={t('a11y.themeDark')}
+  data-label-light={t('a11y.themeLight')}
+  title={t('a11y.themeDark')}
+>
+  <svg
+    class="icon-moon size-[18px]"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.7"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+  </svg>
+  <svg
+    class="icon-sun hidden size-[18px]"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.7"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+  >
+    <circle cx="12" cy="12" r="4"></circle>
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+  </svg>
+</button>
+
+<script is:inline>
+  (() => {
+    const button = document.getElementById('theme-toggle');
+    if (!(button instanceof HTMLButtonElement)) return;
+
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+
+    function storedTheme() {
+      try {
+        const value = localStorage.getItem('theme');
+        return value === 'dark' || value === 'light' ? value : null;
+      } catch {
+        return null;
+      }
+    }
+
+    function currentTheme() {
+      return document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+    }
+
+    function sync() {
+      const theme = currentTheme();
+      const label = theme === 'dark' ? button.dataset.labelLight : button.dataset.labelDark;
+      if (label) {
+        button.setAttribute('aria-label', label);
+        button.setAttribute('title', label);
+      }
+      button.setAttribute('aria-pressed', String(theme === 'dark'));
+    }
+
+    button.addEventListener('click', () => {
+      const next = currentTheme() === 'dark' ? 'light' : 'dark';
+      document.documentElement.dataset.theme = next;
+      try {
+        localStorage.setItem('theme', next);
+      } catch {
+        /* stockage indisponible (navigation privée) : le thème reste valable pour la page */
+      }
+      sync();
+    });
+
+    // Tant que l'utilisateur n'a pas choisi explicitement, on suit le système.
+    media.addEventListener('change', (event) => {
+      if (storedTheme() !== null) return;
+      document.documentElement.dataset.theme = event.matches ? 'dark' : 'light';
+      sync();
+    });
+
+    sync();
+  })();
+</script>
+
+<style>
+  [data-theme='dark'] .icon-moon {
+    display: none;
+  }
+
+  [data-theme='dark'] .icon-sun {
+    display: block;
+  }
+</style>

@@ -1,0 +1,103 @@
+---
+import { navItems } from '@/data/navigation';
+import type { Lang } from '@/i18n/ui';
+import { localizePath, useTranslations } from '@/i18n/utils';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+const year = new Date().getFullYear();
+
+const github = 'https://github.com/hosayni/';
+const linkedin = 'https://www.linkedin.com/in/hosayni/'; // [À COMPLÉTER : URL exacte du profil]
+const email = 'hosayni92@gmail.com';
+---
+
+<footer class="border-t border-line">
+  <div class="container-page grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr]">
+    <div class="max-w-sm">
+      <a
+        href={localizePath(lang, '/')}
+        class="inline-flex items-center gap-3 no-underline"
+        aria-label={`${t('site.name')} — ${t('nav.home')}`}
+      >
+        <span
+          class="grid size-10 place-items-center rounded-[10px] border border-line bg-surface font-mono text-sm font-semibold"
+          aria-hidden="true"
+        >
+          MH
+        </span>
+        <span class="text-sm font-semibold tracking-tight">{t('site.name')}</span>
+      </a>
+      <p class="mt-4 text-sm leading-relaxed text-muted">{t('footer.tagline')}</p>
+    </div>
+
+    <nav aria-label={t('footer.navLabel')}>
+      <h2 class="eyebrow">{t('footer.explore')}</h2>
+      <ul class="mt-4 flex flex-col gap-2 text-sm">
+        {navItems.map((item) => (
+          <li>
+            <a
+              href={localizePath(lang, item.path)}
+              class="text-muted no-underline transition-colors hover:text-ink"
+            >
+              {t(item.key)}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+
+    <div>
+      <h2 class="eyebrow">{t('footer.contact')}</h2>
+      <ul class="mt-4 flex flex-col gap-2 text-sm">
+        <li>
+          <a
+            href={`mailto:${email}`}
+            class="text-muted no-underline transition-colors hover:text-ink"
+          >
+            {email}
+          </a>
+        </li>
+        <li>
+          <a
+            href={github}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-muted no-underline transition-colors hover:text-ink"
+          >
+            GitHub<span class="sr-only"> {t('a11y.external')}</span>
+          </a>
+        </li>
+        <li>
+          <a
+            href={linkedin}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-muted no-underline transition-colors hover:text-ink"
+          >
+            LinkedIn<span class="sr-only"> {t('a11y.external')}</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="border-t border-line">
+    <div class="container-page flex flex-col gap-2 py-5 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
+      <p>
+        © {year} {t('site.name')}. {t('footer.rights')}
+      </p>
+      <p class="flex flex-wrap items-center gap-x-2 gap-y-1">
+        <span>{t('footer.builtWith')}</span>
+        <span aria-hidden="true">·</span>
+        <a href={`${github}portfolio`} class="underline" target="_blank" rel="noopener noreferrer">
+          {t('footer.source')}
+        </a>
+      </p>
+    </div>
+  </div>
+</footer>

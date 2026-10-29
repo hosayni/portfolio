@@ -1,0 +1,84 @@
+---
+import ThemeToggle from '@/components/ThemeToggle.astro';
+import { navItems } from '@/data/navigation';
+import { languages, type Lang } from '@/i18n/ui';
+import { localizePath, useTranslations } from '@/i18n/utils';
+
+interface Props {
+  lang: Lang;
+  /** Variantes localisées de la page courante, calculées par BaseLayout. */
+  alternates: { lang: Lang; href: string }[];
+}
+
+const { lang, alternates } = Astro.props;
+const t = useTranslations(lang);
+const current = Astro.url.pathname;
+
+/**
+ * Un lien est actif s'il correspond exactement à la page, ou s'il s'agit
+ * d'une page enfant (/fr/projets/mon-projet/). L'accueil est traité à part
+ * pour ne pas être actif partout.
+ */
+function isCurrent(path: string): boolean {
+  const target = localizePath(lang, path);
+  return target === `/${lang}/` ? current === target : current.startsWith(target);
+}
+---
+
+<header class="site-header">
+  <div class="container-page flex flex-wrap items-center gap-x-6 gap-y-1 py-3">
+    <a
+      href={localizePath(lang, '/')}
+      class="order-1 flex items-center gap-3 no-underline"
+      aria-label={`${t('site.name')} — ${t('nav.home')}`}
+    >
+      <span
+        class="grid size-10 shrink-0 place-items-center rounded-[10px] border border-line bg-surface font-mono text-sm font-semibold tracking-tight"
+        aria-hidden="true"
+      >
+        MH
+      </span>
+      <span class="leading-tight">
+        <span class="block text-[0.92rem] font-semibold tracking-tight">{t('site.name')}</span>
+        <span class="block font-mono text-[0.66rem] tracking-[0.08em] text-muted uppercase">
+          {t('hero.focus')}
+        </span>
+      </span>
+    </a>
+
+    <div class="order-3 w-full md:order-2 md:ml-auto md:w-auto">
+      <nav aria-label={t('nav.label')}>
+        <ul class="flex flex-wrap items-center gap-x-5 gap-y-0">
+          {navItems.map((item) => (
+            <li>
+              <a
+                href={localizePath(lang, item.path)}
+                class="nav-link"
+                aria-current={isCurrent(item.path) ? 'page' : undefined}
+              >
+                {t(item.key)}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    </div>
+
+    <div class="order-2 ml-auto flex items-center gap-2 md:order-3 md:ml-0">
+      <nav class="lang-switch" aria-label={t('a11y.lang')}>
+        {alternates.map(({ lang: code, href }) =>
+          code === lang ? (
+            <span aria-current="true" aria-label={languages[code].label}>
+              {languages[code].short}
+            </span>
+          ) : (
+            <a href={href} hreflang={code} lang={code} aria-label={languages[code].label}>
+              {languages[code].short}
+            </a>
+          ),
+        )}
+      </nav>
+      <ThemeToggle lang={lang} />
+    </div>
+  </div>
+</header>

@@ -1,0 +1,23 @@
+---
+import ComingSoon from '@/components/ComingSoon.astro';
+import PageHeader from '@/components/PageHeader.astro';
+import { locales, type Lang } from '@/i18n/ui';
+import { useTranslations } from '@/i18n/utils';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+
+export function getStaticPaths() {
+  return locales.map((lang) => ({ params: { lang } }));
+}
+
+const lang = Astro.params.lang as Lang;
+const t = useTranslations(lang);
+---
+
+<BaseLayout title={t('career.title')} description={t('career.lead')} lang={lang}>
+  <PageHeader
+    eyebrow={`03 — ${t('nav.career')}`}
+    title={t('career.title')}
+    lead={t('career.lead')}
+  />
+  <ComingSoon text={t('common.comingSoon')} />
+</BaseLayout>
