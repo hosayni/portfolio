@@ -45,6 +45,10 @@ updates:
       - dependency-name: '@astrojs/*'
         update-types:
           - version-update:semver-major
+      # Astro 5 utilise Vite 6 ; Vite 7/8 casse les types et la CI.
+      - dependency-name: vite
+        update-types:
+          - version-update:semver-major
       # Astro 5 et @astrojs/check 0.9.x ne supportent que TypeScript 5/6.
       # Une montée vers TypeScript 7 casse la CI (`npm ci`).
       - dependency-name: typescript
