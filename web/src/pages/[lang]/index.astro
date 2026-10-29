@@ -1,9 +1,9 @@
 ---
 import ProjectCard from '@/components/ProjectCard.astro';
-import { featuredProjects } from '@/data/projects';
 import { locales, type Lang } from '@/i18n/ui';
 import { localizePath, useTranslations } from '@/i18n/utils';
 import BaseLayout from '@/layouts/BaseLayout.astro';
+import { getFeaturedProjects } from '@/lib/content';
 
 export function getStaticPaths() {
   return locales.map((lang) => ({ params: { lang } }));
@@ -11,6 +11,7 @@ export function getStaticPaths() {
 
 const lang = Astro.params.lang as Lang;
 const t = useTranslations(lang);
+const featuredProjects = await getFeaturedProjects(lang);
 
 const projectsHref = localizePath(lang, '/projets/');
 const contactHref = localizePath(lang, '/contact/');
@@ -197,8 +198,9 @@ const personJsonLd = {
       <p class="eyebrow">{t('home.contact.eyebrow')}</p>
       <h2 class="mt-4 max-w-[22ch] text-h2 font-semibold">{t('home.contact.title')}</h2>
       <p class="mt-4 max-w-[55ch] text-muted">{t('home.contact.lead')}</p>
-      <a class="btn mt-7" href="mailto:hosayni92@gmail.com">
+      <a class="btn mt-7" href={contactHref}>
         {t('home.contact.cta')}
+        <span aria-hidden="true">→</span>
       </a>
     </div>
   </section>

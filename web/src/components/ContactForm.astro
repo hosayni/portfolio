@@ -1,0 +1,242 @@
+---
+import { legalPath } from '@/data/legal';
+import type { Lang } from '@/i18n/ui';
+import { useTranslations } from '@/i18n/utils';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+const privacyHref = legalPath(lang, 'privacy');
+const messages = {
+  required: t('contact.required'),
+  email: t('contact.emailInvalid'),
+  short: t('contact.tooShort'),
+  sending: t('contact.sending'),
+  success: t('contact.success'),
+  error: t('contact.error'),
+};
+---
+
+<form
+  id="contact-form"
+  class="grid gap-5"
+  method="post"
+  action="/api/contact"
+  data-lang={lang}
+  data-messages={JSON.stringify(messages)}
+>
+  <div>
+    <label class="field-label" for="contact-name">
+      {t('contact.name')} <span aria-hidden="true">*</span>
+    </label>
+    <input
+      class="field-input"
+      id="contact-name"
+      name="name"
+      type="text"
+      required
+      minlength="2"
+      maxlength="120"
+      autocomplete="name"
+      placeholder={t('contact.namePlaceholder')}
+      aria-describedby="contact-name-error"
+    />
+    <p class="field-error" id="contact-name-error" hidden></p>
+  </div>
+
+  <div>
+    <label class="field-label" for="contact-email">
+      {t('contact.email')} <span aria-hidden="true">*</span>
+    </label>
+    <input
+      class="field-input"
+      id="contact-email"
+      name="email"
+      type="email"
+      required
+      maxlength="254"
+      autocomplete="email"
+      inputmode="email"
+      placeholder={t('contact.emailPlaceholder')}
+      aria-describedby="contact-email-error"
+    />
+    <p class="field-error" id="contact-email-error" hidden></p>
+  </div>
+
+  <div>
+    <label class="field-label" for="contact-message">
+      {t('contact.message')} <span aria-hidden="true">*</span>
+    </label>
+    <textarea
+      class="field-input"
+      id="contact-message"
+      name="message"
+      required
+      minlength="20"
+      maxlength="5000"
+      rows="7"
+      placeholder={t('contact.messagePlaceholder')}
+      aria-describedby="contact-message-error"
+    ></textarea>
+    <p class="field-error" id="contact-message-error" hidden></p>
+  </div>
+
+  <div class="hp" aria-hidden="true">
+    <label for="contact-website">Website</label>
+    <input id="contact-website" name="website" type="text" tabindex="-1" autocomplete="off" />
+  </div>
+
+  <div>
+    <div class="flex items-start gap-3">
+      <input
+        class="mt-1 size-4 shrink-0 accent-[var(--c-accent)]"
+        id="contact-consent"
+        name="consent"
+        type="checkbox"
+        required
+        aria-describedby="contact-consent-error"
+      />
+      <label class="text-xs leading-relaxed text-muted" for="contact-consent">
+        {t('contact.consent')}
+        <a class="underline decoration-line underline-offset-2 hover:text-ink" href={privacyHref}>
+          {t('contact.privacy')}
+        </a>
+      </label>
+    </div>
+    <p class="field-error" id="contact-consent-error" hidden></p>
+  </div>
+
+  <div class="flex flex-wrap items-center gap-4">
+    <button class="btn" type="submit">
+      <span data-submit-label>{t('contact.submit')}</span>
+      <span aria-hidden="true">→</span>
+    </button>
+    <p class="text-xs text-muted">
+      {t('contact.direct')}
+      <a
+        class="underline decoration-line underline-offset-2 hover:text-ink"
+        href="mailto:hosayni92@gmail.com"
+      >
+        hosayni92@gmail.com
+      </a>
+    </p>
+  </div>
+
+  <p class="form-status" data-status role="status" aria-live="polite" hidden></p>
+</form>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('#contact-form');
+
+  if (form) {
+    form.noValidate = true;
+
+    const messages = JSON.parse(form.dataset.messages ?? '{}') as Record<string, string>;
+    const statusEl = form.querySelector<HTMLElement>('[data-status]');
+    const submitButton = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+    const submitLabel = form.querySelector<HTMLElement>('[data-submit-label]');
+    const defaultLabel = submitLabel?.textContent ?? '';
+
+    const field = (name: string) =>
+      form.elements.namedItem(name) as HTMLInputElement | HTMLTextAreaElement | null;
+
+    const setError = (name: string, message: string | null) => {
+      const input = field(name);
+      const error = form.querySelector<HTMLElement>(`#contact-${name}-error`);
+
+      if (input) input.setAttribute('aria-invalid', message ? 'true' : 'false');
+      if (error) {
+        error.textContent = message ?? '';
+        error.hidden = message === null;
+      }
+    };
+
+    const validate = (): boolean => {
+      const invalid: HTMLElement[] = [];
+      const name = field('name')?.value.trim() ?? '';
+      const email = field('email')?.value.trim() ?? '';
+      const message = field('message')?.value.trim() ?? '';
+      const consent = field('consent') as HTMLInputElement | null;
+
+      const check = (fieldName: string, valid: boolean, error: string) => {
+        if (valid) {
+          setError(fieldName, null);
+          return;
+        }
+        setError(fieldName, error);
+        const input = field(fieldName);
+        if (input) invalid.push(input);
+      };
+
+      check('name', name.length >= 2, messages.required ?? '');
+      check('email', /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email), messages.email ?? '');
+      check('message', message.length >= 20, messages.short ?? '');
+      check('consent', consent?.checked === true, messages.required ?? '');
+
+      invalid[0]?.focus();
+      return invalid.length === 0;
+    };
+
+    const showStatus = (state: 'success' | 'error', text: string) => {
+      if (!statusEl) return;
+      statusEl.hidden = false;
+      statusEl.dataset.state = state;
+      statusEl.textContent = text;
+    };
+
+    form.addEventListener('input', (event) => {
+      const target = event.target;
+      if (
+        (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) &&
+        target.getAttribute('aria-invalid') === 'true'
+      ) {
+        setError(target.name, null);
+      }
+    });
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (!validate()) return;
+
+      const payload = {
+        name: field('name')?.value.trim() ?? '',
+        email: field('email')?.value.trim() ?? '',
+        message: field('message')?.value.trim() ?? '',
+        website: field('website')?.value ?? '',
+        consent: true,
+        lang: form.dataset.lang,
+      };
+
+      // Honeypot rempli : on répond « succès » sans rien envoyer.
+      if (payload.website !== '') {
+        form.reset();
+        showStatus('success', messages.success ?? '');
+        return;
+      }
+
+      submitButton?.setAttribute('disabled', 'disabled');
+      if (submitLabel) submitLabel.textContent = messages.sending ?? defaultLabel;
+
+      try {
+        const response = await fetch(form.action, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) throw new Error(String(response.status));
+
+        form.reset();
+        showStatus('success', messages.success ?? '');
+      } catch {
+        showStatus('error', messages.error ?? '');
+      } finally {
+        submitButton?.removeAttribute('disabled');
+        if (submitLabel) submitLabel.textContent = defaultLabel;
+      }
+    });
+  }
+</script>

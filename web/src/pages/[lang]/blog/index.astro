@@ -1,9 +1,10 @@
 ---
-import ComingSoon from '@/components/ComingSoon.astro';
+import BlogCard from '@/components/BlogCard.astro';
 import PageHeader from '@/components/PageHeader.astro';
 import { locales, type Lang } from '@/i18n/ui';
 import { useTranslations } from '@/i18n/utils';
 import BaseLayout from '@/layouts/BaseLayout.astro';
+import { getPosts } from '@/lib/content';
 
 export function getStaticPaths() {
   return locales.map((lang) => ({ params: { lang } }));
@@ -11,9 +12,42 @@ export function getStaticPaths() {
 
 const lang = Astro.params.lang as Lang;
 const t = useTranslations(lang);
+const posts = await getPosts(lang);
+const tags = [...new Set(posts.flatMap((post) => post.data.tags))].sort((a, b) =>
+  a.localeCompare(b, lang),
+);
+const rssHref = `/${lang}/rss.xml`;
 ---
 
 <BaseLayout title={t('blog.title')} description={t('blog.lead')} lang={lang}>
   <PageHeader eyebrow={`04 — ${t('nav.blog')}`} title={t('blog.title')} lead={t('blog.lead')} />
-  <ComingSoon text={t('common.comingSoon')} />
+
+  <section class="pb-20 md:pb-28">
+    <div class="container-page">
+      <div class="flex flex-wrap items-center justify-between gap-4 border-b border-line pb-6">
+        <ul class="flex flex-wrap gap-2" aria-label={t('blog.tags')}>
+          {tags.map((tag) => (
+            <li class="tag">{tag}</li>
+          ))}
+        </ul>
+        <a
+          class="inline-flex items-center gap-1.5 font-mono text-xs text-muted no-underline transition-colors hover:text-ink"
+          href={rssHref}
+        >
+          {t('blog.rss')}
+          <span aria-hidden="true">↗</span>
+        </a>
+      </div>
+
+      {posts.length === 0 ? (
+        <p class="mt-10 text-sm text-muted">{t('blog.noPosts')}</p>
+      ) : (
+        <div class="mt-8 grid gap-6 md:grid-cols-2">
+          {posts.map((post, index) => (
+            <BlogCard post={post} lang={lang} index={index} />
+          ))}
+        </div>
+      )}
+    </div>
+  </section>
 </BaseLayout>

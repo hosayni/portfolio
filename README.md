@@ -6,8 +6,8 @@ Portfolio professionnel bilingue (FR/EN), rapide et optimisé pour le référenc
 [![Deploy](https://github.com/hosayni/portfolio/actions/workflows/deploy.yml/badge.svg)](https://github.com/hosayni/portfolio/actions/workflows/deploy.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-> **État du projet :** en construction — étape 2/10 (base Astro, layout SEO, i18n FR/EN).
-> Le site public, l'API et le déploiement sont ajoutés aux étapes suivantes (voir la [feuille de route](#feuille-de-route)).
+> **État du projet :** en construction — étape 3/10 (contenu, collections Astro, blog et pages légales).
+> L'API, les conteneurs, la CI/CD et la supervision sont ajoutés aux étapes suivantes (voir la [feuille de route](#feuille-de-route)).
 
 ---
 
@@ -61,12 +61,19 @@ Principes :
 ```text
 portfolio/
 ├── web/                    # Astro : site public (layout SEO, i18n, pages)
+│   └── src/
+│       ├── content/        # Projets, articles et pages légales (Markdown + Zod)
+│       ├── lib/            # Accès aux collections, dates, temps de lecture
+│       ├── components/     # Header, Footer, cartes, formulaire, schémas
+│       ├── data/           # Compétences, parcours, navigation
+│       └── pages/[lang]/   # Routes FR/EN générées à partir des collections
 ├── api/                    # Flask : API interne (à venir, étape 4)
 ├── deploy/                 # Compose de production, Caddyfile (étape 7)
 ├── docs/
 │   ├── adr/                # Journal des décisions d'architecture
 │   └── DEPLOIEMENT.md      # Procédure de mise en production (étape 10)
 ├── .github/workflows/      # CI et CD (étapes 6 et 7)
+├── HISTORIQUE.md           # Journal local de construction, étape par étape
 ├── .env.example            # Variables attendues (aucune valeur réelle)
 ├── .editorconfig
 ├── .gitattributes
@@ -148,7 +155,7 @@ sur le VPS → healthcheck → rollback automatique en cas d'échec.
 
 - [x] **1. Initialisation** — dépôt, conventions, structure, documentation de départ
 - [x] **2. Frontend** — Astro 5, TypeScript strict, Tailwind, layout SEO, i18n FR/EN, thème
-- [ ] **3. Pages et contenu** — accueil, projets, compétences, parcours, blog, contact, pages légales
+- [x] **3. Pages et contenu** — collections Astro, projets détaillés, compétences, parcours, blog, contact, pages légales
 - [ ] **4. API Flask** — endpoint santé, projets GitHub avec cache, contact validé et limité
 - [ ] **5. Docker** — images multi-stage, nginx, Compose de développement
 - [ ] **6. CI** — workflows, Dependabot, revue de PR

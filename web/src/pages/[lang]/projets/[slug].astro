@@ -1,0 +1,234 @@
+---
+import { getCollection, render } from 'astro:content';
+import ArchitectureDiagram from '@/components/ArchitectureDiagram.astro';
+import { languages, type Lang } from '@/i18n/ui';
+import { localizePath, useTranslations } from '@/i18n/utils';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { entrySlug, getAlternateSlugs, getProjects } from '@/lib/content';
+
+export async function getStaticPaths() {
+  const projects = await getCollection('projects', ({ data }) => !data.draft);
+  return projects.map((entry) => ({
+    params: { lang: entry.data.lang, slug: entrySlug(entry.id) },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { data } = entry;
+const lang = data.lang as Lang;
+const t = useTranslations(lang);
+const { Content } = await render(entry);
+
+const projects = await getProjects(lang);
+const index = projects.findIndex((item) => item.id === entry.id);
+const previous = index > 0 ? (projects[index - 1] ?? null) : null;
+const next = index >= 0 ? (projects[index + 1] ?? null) : null;
+
+const alternateSlugs = await getAlternateSlugs('projects', data.translationKey, lang);
+const alternates: Partial<Record<Lang, string>> = {
+  [lang]: localizePath(lang, `/projets/${entrySlug(entry.id)}/`),
+};
+for (const code of Object.keys(alternateSlugs) as Lang[]) {
+  const slug = alternateSlugs[code];
+  if (slug) alternates[code] = localizePath(code, `/projets/${slug}/`);
+}
+
+const site = Astro.site ?? new URL('https://hosayni.com');
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'CreativeWork',
+  name: data.title,
+  description: data.summary,
+  url: new URL(Astro.url.pathname, site).href,
+  author: { '@type': 'Person', name: 'Mohamed Hosayni' },
+  keywords: data.tags.join(', '),
+  dateCreated: data.year,
+  inLanguage: languages[lang].htmlLang,
+};
+
+const backHref = localizePath(lang, '/projets/');
+---
+
+<BaseLayout
+  title={data.title}
+  description={data.summary}
+  lang={lang}
+  type="article"
+  alternates={alternates}
+  jsonLd={jsonLd}
+>
+  <article>
+    <header class="container-page pt-10 md:pt-14">
+      <a
+        href={backHref}
+        class="inline-flex items-center gap-2 text-sm text-muted no-underline transition-colors hover:text-ink"
+      >
+        <span aria-hidden="true">←</span>
+        {t('project.back')}
+      </a>
+
+      <div class="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_260px] lg:gap-16">
+        <div>
+          <p class="eyebrow">
+            {data.year} — {data.role}
+          </p>
+          <h1 class="mt-4 max-w-[24ch] text-h2 font-semibold">{data.title}</h1>
+          <p class="mt-5 max-w-[58ch] text-lead text-muted">{data.summary}</p>
+
+          <ul class="mt-6 flex flex-wrap gap-2" aria-label="Technologies">
+            {data.tags.map((tag) => (
+              <li class="tag">{tag}</li>
+            ))}
+          </ul>
+
+          <div class="mt-8 flex flex-wrap gap-3">
+            {data.demoUrl && (
+              <a class="btn" href={data.demoUrl} target="_blank" rel="noopener noreferrer">
+                {t('project.demo')}
+                <span class="sr-only"> {t('a11y.external')}</span>
+                <span aria-hidden="true">↗</span>
+              </a>
+            )}
+            {data.repoUrl && (
+              <a
+                class="btn btn--ghost"
+                href={data.repoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {t('project.repo')}
+                <span class="sr-only"> {t('a11y.external')}</span>
+                <span aria-hidden="true">↗</span>
+              </a>
+            )}
+          </div>
+        </div>
+
+        <dl class="grid gap-5 self-start border-t border-line pt-5 text-sm lg:border-t-0 lg:border-l lg:pt-0 lg:pl-8">
+          <div>
+            <dt class="font-mono text-[0.66rem] tracking-[0.16em] text-muted uppercase">
+              {t('project.role')}
+            </dt>
+            <dd class="mt-1">{data.role}</dd>
+          </div>
+          <div>
+            <dt class="font-mono text-[0.66rem] tracking-[0.16em] text-muted uppercase">
+              {t('project.duration')}
+            </dt>
+            <dd class="mt-1">{data.duration}</dd>
+          </div>
+          <div>
+            <dt class="font-mono text-[0.66rem] tracking-[0.16em] text-muted uppercase">
+              {t('project.year')}
+            </dt>
+            <dd class="mt-1 font-mono text-xs text-muted">{data.year}</dd>
+          </div>
+        </dl>
+      </div>
+    </header>
+
+    <section class="container-page pt-14 md:pt-20">
+      <h2 class="eyebrow">{t('project.architecture')}</h2>
+      <div class="mt-6">
+        <ArchitectureDiagram layers={data.architecture} label={t('project.architecture')} />
+      </div>
+    </section>
+
+    <section class="container-page py-14 md:py-20">
+      <div class="grid gap-12 lg:grid-cols-[minmax(0,1fr)_260px] lg:gap-16">
+        <div class="prose">
+          <Content />
+        </div>
+
+        <aside class="self-start lg:border-l lg:border-line lg:pl-8">
+          <h2 class="eyebrow">{t('project.stack')}</h2>
+          <ul class="mt-4 flex flex-wrap gap-2">
+            {data.stack.map((item) => (
+              <li class="tag">{item}</li>
+            ))}
+          </ul>
+        </aside>
+      </div>
+    </section>
+
+    <section class="border-y border-line bg-surface">
+      <div class="container-page section">
+        <div class="grid gap-12 lg:grid-cols-2 lg:gap-16">
+          <div>
+            <h2 class="eyebrow">{t('project.challenges')}</h2>
+            <ol class="mt-6 grid gap-5">
+              {data.challenges.map((challenge, itemIndex) => (
+                <li class="flex gap-4">
+                  <span class="mt-0.5 font-mono text-xs text-accent" aria-hidden="true">
+                    {String(itemIndex + 1).padStart(2, '0')}
+                  </span>
+                  <p class="max-w-[46ch] text-sm leading-relaxed text-muted">{challenge}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          <div>
+            <h2 class="eyebrow">{t('project.results')}</h2>
+            <dl class="mt-6 grid gap-6 sm:grid-cols-3">
+              {data.results.map((result) => (
+                <div class="border-t border-line pt-4">
+                  <dt class="sr-only">{result.label}</dt>
+                  <dd>
+                    <span class="block text-h3 font-semibold text-ink">{result.value}</span>
+                    <span class="mt-1 block text-xs leading-relaxed text-muted">
+                      {result.label}
+                    </span>
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="container-page section">
+      <h2 class="eyebrow">{t('project.screenshots')}</h2>
+      <div class="mt-6 grid place-items-center rounded-[16px] border border-dashed border-line bg-surface px-6 py-16 text-center">
+        <p class="max-w-[44ch] font-mono text-xs leading-relaxed text-muted">
+          {t('project.screenshotsNote')}
+        </p>
+      </div>
+    </section>
+
+    <nav class="container-page pb-20 md:pb-28" aria-label={t('nav.projects')}>
+      <div class="grid gap-4 border-t border-line pt-8 sm:grid-cols-2">
+        {previous ? (
+          <a
+            class="group no-underline"
+            href={localizePath(lang, `/projets/${entrySlug(previous.id)}/`)}
+          >
+            <span class="font-mono text-[0.66rem] tracking-[0.16em] text-muted uppercase">
+              ← {t('project.previous')}
+            </span>
+            <span class="mt-1 block text-h3 font-semibold group-hover:text-accent">
+              {previous.data.title}
+            </span>
+          </a>
+        ) : (
+          <span></span>
+        )}
+        {next && (
+          <a
+            class="group no-underline sm:text-right"
+            href={localizePath(lang, `/projets/${entrySlug(next.id)}/`)}
+          >
+            <span class="font-mono text-[0.66rem] tracking-[0.16em] text-muted uppercase">
+              {t('project.next')} →
+            </span>
+            <span class="mt-1 block text-h3 font-semibold group-hover:text-accent">
+              {next.data.title}
+            </span>
+          </a>
+        )}
+      </div>
+    </nav>
+  </article>
+</BaseLayout>

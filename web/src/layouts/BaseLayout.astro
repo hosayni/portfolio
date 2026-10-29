@@ -61,6 +61,12 @@ const serializedJsonLd = jsonLdList.map((data) => JSON.stringify(data).replace(/
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title={`${siteName} — ${t('blog.title')}`}
+      href={new URL(`/${lang}/rss.xml`, site).href}
+    />
     {noindex && <meta name="robots" content="noindex, nofollow" />}
 
     <!-- Open Graph -->

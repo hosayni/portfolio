@@ -1,5 +1,6 @@
 ---
 import { navItems } from '@/data/navigation';
+import { legalPath } from '@/data/legal';
 import type { Lang } from '@/i18n/ui';
 import { localizePath, useTranslations } from '@/i18n/utils';
 
@@ -10,6 +11,10 @@ interface Props {
 const { lang } = Astro.props;
 const t = useTranslations(lang);
 const year = new Date().getFullYear();
+const footerNav = [
+  ...navItems,
+  { key: 'footer.infrastructure', path: '/infrastructure/' } as const,
+];
 
 const github = 'https://github.com/hosayni/';
 const linkedin = 'https://www.linkedin.com/in/hosayni/'; // [À COMPLÉTER : URL exacte du profil]
@@ -38,7 +43,7 @@ const email = 'hosayni92@gmail.com';
     <nav aria-label={t('footer.navLabel')}>
       <h2 class="eyebrow">{t('footer.explore')}</h2>
       <ul class="mt-4 flex flex-col gap-2 text-sm">
-        {navItems.map((item) => (
+        {footerNav.map((item) => (
           <li>
             <a
               href={localizePath(lang, item.path)}
@@ -87,17 +92,23 @@ const email = 'hosayni92@gmail.com';
   </div>
 
   <div class="border-t border-line">
-    <div class="container-page flex flex-col gap-2 py-5 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
+    <div class="container-page flex flex-col gap-3 py-5 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
       <p>
         © {year} {t('site.name')}. {t('footer.rights')}
       </p>
-      <p class="flex flex-wrap items-center gap-x-2 gap-y-1">
-        <span>{t('footer.builtWith')}</span>
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
+        <a class="underline" href={legalPath(lang, 'notice')}>
+          {t('footer.notice')}
+        </a>
+        <a class="underline" href={legalPath(lang, 'privacy')}>
+          {t('footer.privacy')}
+        </a>
         <span aria-hidden="true">·</span>
+        <span>{t('footer.builtWith')}</span>
         <a href={`${github}portfolio`} class="underline" target="_blank" rel="noopener noreferrer">
           {t('footer.source')}
         </a>
-      </p>
+      </div>
     </div>
   </div>
 </footer>

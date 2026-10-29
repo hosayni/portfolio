@@ -1,9 +1,10 @@
 ---
-import ComingSoon from '@/components/ComingSoon.astro';
 import PageHeader from '@/components/PageHeader.astro';
+import ProjectCard from '@/components/ProjectCard.astro';
 import { locales, type Lang } from '@/i18n/ui';
 import { useTranslations } from '@/i18n/utils';
 import BaseLayout from '@/layouts/BaseLayout.astro';
+import { getProjects } from '@/lib/content';
 
 export function getStaticPaths() {
   return locales.map((lang) => ({ params: { lang } }));
@@ -11,6 +12,14 @@ export function getStaticPaths() {
 
 const lang = Astro.params.lang as Lang;
 const t = useTranslations(lang);
+const projects = await getProjects(lang);
+const tags = [...new Set(projects.flatMap((project) => project.data.tags))].sort((a, b) =>
+  a.localeCompare(b, lang),
+);
+const countOne = t('projects.countOne');
+const countMany = t('projects.countMany');
+const countLabel = (count: number) =>
+  count === 1 ? countOne : countMany.replace('{count}', String(count));
 ---
 
 <BaseLayout title={t('projects.title')} description={t('projects.lead')} lang={lang}>
@@ -19,5 +28,98 @@ const t = useTranslations(lang);
     title={t('projects.title')}
     lead={t('projects.lead')}
   />
-  <ComingSoon text={t('common.comingSoon')} />
+
+  <section class="pb-20 md:pb-28">
+    <div
+      class="container-page"
+      data-project-filter
+      data-count-one={countOne}
+      data-count-many={countMany}
+    >
+      <div
+        class="flex flex-wrap items-center gap-2"
+        data-filter-tools
+        role="group"
+        aria-labelledby="filter-label"
+        hidden
+      >
+        <span
+          id="filter-label"
+          class="mr-1 font-mono text-[0.68rem] tracking-[0.16em] text-muted uppercase"
+        >
+          {t('projects.filterLabel')}
+        </span>
+        <button class="filter-btn" type="button" data-filter="*" aria-pressed="true">
+          {t('projects.filterAll')}
+        </button>
+        {tags.map((tag) => (
+          <button class="filter-btn" type="button" data-filter={tag} aria-pressed="false">
+            {tag}
+          </button>
+        ))}
+      </div>
+
+      <p
+        class="mt-4 font-mono text-xs text-muted"
+        data-filter-status
+        role="status"
+        aria-live="polite"
+      >
+        {countLabel(projects.length)}
+      </p>
+
+      <ul class="mt-8 grid gap-6 md:grid-cols-2">
+        {projects.map((project, index) => (
+          <li data-project-item data-tags={project.data.tags.join('|')}>
+            <ProjectCard project={project} lang={lang} index={index} />
+          </li>
+        ))}
+      </ul>
+
+      <p class="mt-8 text-sm text-muted" data-filter-empty hidden>
+        {t('projects.empty')}
+      </p>
+    </div>
+  </section>
 </BaseLayout>
+
+<script>
+  const root = document.querySelector<HTMLElement>('[data-project-filter]');
+
+  if (root) {
+    const tools = root.querySelector<HTMLElement>('[data-filter-tools]');
+    const buttons = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-filter]'));
+    const items = Array.from(root.querySelectorAll<HTMLElement>('[data-project-item]'));
+    const status = root.querySelector<HTMLElement>('[data-filter-status]');
+    const empty = root.querySelector<HTMLElement>('[data-filter-empty]');
+    const countOne = root.dataset.countOne ?? '1';
+    const countMany = root.dataset.countMany ?? '{count}';
+
+    if (tools) tools.hidden = false;
+
+    const apply = (active: string) => {
+      let visible = 0;
+
+      for (const item of items) {
+        const tags = (item.dataset.tags ?? '').split('|');
+        const show = active === '*' || tags.includes(active);
+        item.hidden = !show;
+        if (show) visible += 1;
+      }
+
+      if (status) {
+        status.textContent =
+          visible === 1 ? countOne : countMany.replace('{count}', String(visible));
+      }
+      if (empty) empty.hidden = visible > 0;
+
+      for (const button of buttons) {
+        button.setAttribute('aria-pressed', String(button.dataset.filter === active));
+      }
+    };
+
+    for (const button of buttons) {
+      button.addEventListener('click', () => apply(button.dataset.filter ?? '*'));
+    }
+  }
+</script>

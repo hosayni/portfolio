@@ -1,0 +1,65 @@
+---
+import { getCollection, render } from 'astro:content';
+import type { Lang } from '@/i18n/ui';
+import { localizePath, useTranslations } from '@/i18n/utils';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { getAlternateSlugs } from '@/lib/content';
+import { formatDate } from '@/lib/format';
+
+export async function getStaticPaths() {
+  const pages = await getCollection('pages');
+  return pages.map((entry) => ({
+    params: { lang: entry.data.lang, page: entry.data.slug },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { data } = entry;
+const lang = data.lang as Lang;
+const t = useTranslations(lang);
+const { Content } = await render(entry);
+
+const alternateSlugs = await getAlternateSlugs('pages', data.translationKey, lang);
+const alternates: Partial<Record<Lang, string>> = {
+  [lang]: localizePath(lang, `/${data.slug}/`),
+};
+for (const code of Object.keys(alternateSlugs) as Lang[]) {
+  const slug = alternateSlugs[code];
+  if (slug) alternates[code] = localizePath(code, `/${slug}/`);
+}
+
+const homeHref = localizePath(lang, '/');
+---
+
+<BaseLayout title={data.title} description={data.description} lang={lang} alternates={alternates}>
+  <article>
+    <header class="container-page pt-10 md:pt-14">
+      <a
+        href={homeHref}
+        class="inline-flex items-center gap-2 text-sm text-muted no-underline transition-colors hover:text-ink"
+      >
+        <span aria-hidden="true">←</span>
+        {t('legal.back')}
+      </a>
+
+      <div class="mt-8 max-w-3xl">
+        <p class="eyebrow">{t('footer.legal')}</p>
+        <h1 class="mt-4 text-h2 font-semibold">{data.title}</h1>
+        <p class="mt-4 text-lead text-muted">{data.description}</p>
+        <p class="mt-4 font-mono text-xs text-muted">
+          {t('legal.updated')} :
+          <time datetime={data.updatedDate.toISOString()}>
+            {formatDate(data.updatedDate, lang)}
+          </time>
+        </p>
+      </div>
+    </header>
+
+    <div class="container-page py-12 md:py-16">
+      <div class="prose">
+        <Content />
+      </div>
+    </div>
+  </article>
+</BaseLayout>

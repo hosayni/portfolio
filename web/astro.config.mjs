@@ -1,4 +1,5 @@
 // @ts-check
+import mdx from '@astrojs/mdx';
 import { defineConfig } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
 
@@ -27,7 +28,16 @@ export default defineConfig({
       redirectToDefaultLocale: true,
     },
   },
+  markdown: {
+    shikiConfig: {
+      // Deux thèmes : les couleurs sont exposées en variables CSS, puis
+      // sélectionnées par le thème actif dans global.css.
+      themes: { light: 'github-light', dark: 'github-dark' },
+      defaultColor: false,
+    },
+  },
   vite: {
     plugins: [tailwindcss()],
   },
+  integrations: [mdx()],
 });

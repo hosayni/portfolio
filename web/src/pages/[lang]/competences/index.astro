@@ -1,6 +1,6 @@
 ---
-import ComingSoon from '@/components/ComingSoon.astro';
 import PageHeader from '@/components/PageHeader.astro';
+import { skillGroups } from '@/data/skills';
 import { locales, type Lang } from '@/i18n/ui';
 import { useTranslations } from '@/i18n/utils';
 import BaseLayout from '@/layouts/BaseLayout.astro';
@@ -11,6 +11,7 @@ export function getStaticPaths() {
 
 const lang = Astro.params.lang as Lang;
 const t = useTranslations(lang);
+const levels = { advanced: 3, intermediate: 2, beginner: 1 } as const;
 ---
 
 <BaseLayout title={t('skills.title')} description={t('skills.lead')} lang={lang}>
@@ -19,5 +20,40 @@ const t = useTranslations(lang);
     title={t('skills.title')}
     lead={t('skills.lead')}
   />
-  <ComingSoon text={t('common.comingSoon')} />
+
+  <section class="pb-20 md:pb-28">
+    <div class="container-page">
+      <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {skillGroups.map((group, index) => (
+          <section
+            class="card"
+            data-reveal
+            aria-labelledby={`group-${group.key}`}
+            style={`transition-delay: ${index * 60}ms`}
+          >
+            <h2 class="text-h3 font-semibold" id={`group-${group.key}`}>
+              {group.label[lang]}
+            </h2>
+            <p class="text-sm leading-relaxed text-muted">{group.description[lang]}</p>
+
+            <ul class="mt-2 grid">
+              {group.skills.map((skill) => (
+                <li class="flex items-center justify-between gap-4 border-t border-line py-2.5">
+                  <span class="text-sm">{skill.name}</span>
+                  <span class="flex shrink-0 items-center gap-2">
+                    <span class="level-meter" aria-hidden="true">
+                      {[1, 2, 3].map((step) => (
+                        <span class:list={['level-dot', step <= levels[skill.level] && 'is-on']} />
+                      ))}
+                    </span>
+                    <span class="text-[0.7rem] text-muted">{t(`skills.level.${skill.level}`)}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))}
+      </div>
+    </div>
+  </section>
 </BaseLayout>

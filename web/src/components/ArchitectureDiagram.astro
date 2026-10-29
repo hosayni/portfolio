@@ -1,0 +1,108 @@
+---
+interface Props {
+  /** Couches de l'architecture, de l'amont (terrain, navigateur) vers l'aval. */
+  layers: { title: string; items: string[] }[];
+  label: string;
+}
+
+const { layers, label } = Astro.props;
+---
+
+<ol class="arch" aria-label={label}>
+  {layers.map((layer, index) => (
+    <li class="arch__layer">
+      <div class="arch__box">
+        <p class="arch__index" aria-hidden="true">
+          {String(index + 1).padStart(2, '0')}
+        </p>
+        <h3 class="arch__title">{layer.title}</h3>
+        <ul class="arch__items">
+          {layer.items.map((item) => (
+            <li>{item}</li>
+          ))}
+        </ul>
+      </div>
+      {index < layers.length - 1 && (
+        <span class="arch__arrow" aria-hidden="true">
+          →
+        </span>
+      )}
+    </li>
+  ))}
+</ol>
+
+<style>
+  .arch {
+    display: grid;
+    gap: 0.9rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .arch__layer {
+    position: relative;
+  }
+
+  .arch__box {
+    height: 100%;
+    padding: 1.1rem 1.2rem;
+    border: 1px solid var(--c-line);
+    border-radius: 14px;
+    background: var(--c-canvas);
+  }
+
+  .arch__index {
+    font-family: var(--font-mono-stack);
+    font-size: 0.66rem;
+    letter-spacing: 0.14em;
+    color: var(--c-accent);
+  }
+
+  .arch__title {
+    margin-top: 0.35rem;
+    font-size: 0.98rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .arch__items {
+    margin: 0.55rem 0 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 0.3rem;
+    font-size: 0.82rem;
+    line-height: 1.45;
+    color: var(--c-muted);
+  }
+
+  .arch__items li::before {
+    content: '— ';
+    color: var(--c-accent);
+  }
+
+  .arch__arrow {
+    display: block;
+    margin-top: 0.55rem;
+    text-align: center;
+    color: var(--c-muted);
+    font-size: 0.9rem;
+    transform: rotate(90deg);
+  }
+
+  @media (min-width: 768px) {
+    .arch {
+      grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+      gap: 1.6rem;
+    }
+
+    .arch__arrow {
+      position: absolute;
+      top: 50%;
+      right: -1.35rem;
+      margin: 0;
+      transform: translateY(-50%);
+    }
+  }
+</style>

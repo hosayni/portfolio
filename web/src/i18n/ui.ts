@@ -94,7 +94,7 @@ const fr = {
   'home.contact.eyebrow': 'Contact',
   'home.contact.title': 'Un projet, une alternance, une question ?',
   'home.contact.lead':
-    'Le formulaire arrive à l’étape suivante. En attendant, écrivez-moi directement par email.',
+    'Une question, une alternance ou un projet ? Le formulaire est disponible sur la page contact.',
   'home.contact.cta': 'Écrire un message',
 
   // Pages ----------------------------------------------------------------
@@ -112,18 +112,104 @@ const fr = {
     'Notes de terrain sur le développement, le déploiement et l’exploitation d’applications. [À COMPLÉTER]',
   'contact.title': 'Contact',
   'contact.lead':
-    'Le formulaire (validation, honeypot et limitation de débit) sera ajouté à l’étape suivante. En attendant : hosayni92@gmail.com.',
+    'Un projet, une alternance ou simplement une question ? Remplissez le formulaire ci-dessous : je réponds sous quelques jours ouvrés.',
 
   // Divers ---------------------------------------------------------------
   'common.comingSoon':
     '[À COMPLÉTER] Cette section sera remplie avec le contenu réel à l’étape suivante du projet.',
   'common.backHome': 'Retour à l’accueil',
 
+  // Projets --------------------------------------------------------------
+  'projects.filterLabel': 'Filtrer par technologie',
+  'projects.filterAll': 'Tout',
+  'projects.countOne': '1 projet affiché',
+  'projects.countMany': '{count} projets affichés',
+  'projects.empty': 'Aucun projet ne correspond à ce filtre.',
+  'projects.caseStudy': 'Voir l’étude de cas',
+  'project.role': 'Rôle',
+  'project.duration': 'Durée',
+  'project.year': 'Année',
+  'project.stack': 'Stack',
+  'project.architecture': 'Architecture',
+  'project.challenges': 'Difficultés rencontrées',
+  'project.results': 'Résultats',
+  'project.demo': 'Voir la démo',
+  'project.repo': 'Code source',
+  'project.back': 'Tous les projets',
+  'project.screenshots': 'Captures',
+  'project.screenshotsNote':
+    '[À COMPLÉTER : ajouter 2 à 4 captures d’écran avec un texte alternatif.]',
+  'project.next': 'Projet suivant',
+  'project.previous': 'Projet précédent',
+
+  // Compétences ----------------------------------------------------------
+  'skills.legend': 'Niveau',
+  'skills.level.advanced': 'Avancé',
+  'skills.level.intermediate': 'Intermédiaire',
+  'skills.level.beginner': 'Notions',
+
+  // Parcours -------------------------------------------------------------
+  'career.timelineLabel': 'Parcours chronologique',
+  'career.education': 'Formation',
+  'career.experience': 'Expérience',
+  'career.certification': 'Certification',
+  'career.present': 'En cours',
+
+  // Blog -----------------------------------------------------------------
+  'blog.readingTime': 'min de lecture',
+  'blog.published': 'Publié le',
+  'blog.updated': 'Mis à jour le',
+  'blog.toc': 'Sur cette page',
+  'blog.tags': 'Tags',
+  'blog.noPosts': 'Aucun article pour le moment.',
+  'blog.back': 'Tous les articles',
+  'blog.rss': 'Flux RSS',
+  'blog.postsCount': '{count} article(s)',
+
+  // Contact --------------------------------------------------------------
+  'contact.name': 'Nom',
+  'contact.email': 'Email',
+  'contact.message': 'Message',
+  'contact.namePlaceholder': 'Votre nom',
+  'contact.emailPlaceholder': 'vous@exemple.com',
+  'contact.messagePlaceholder': 'Décrivez votre projet ou votre question…',
+  'contact.submit': 'Envoyer le message',
+  'contact.sending': 'Envoi en cours…',
+  'contact.success': 'Message envoyé. Merci, je vous réponds rapidement.',
+  'contact.error': 'L’envoi a échoué. Réessayez dans un instant ou écrivez à hosayni92@gmail.com.',
+  'contact.consent': 'J’accepte que mes données soient utilisées pour répondre à ce message.',
+  'contact.privacy': 'politique de confidentialité',
+  'contact.required': 'Ce champ est obligatoire.',
+  'contact.emailInvalid': 'Saisissez une adresse email valide.',
+  'contact.tooShort': 'Le message doit contenir au moins 20 caractères.',
+  'contact.direct': 'Ou écrivez directement à',
+
+  // Pages légales --------------------------------------------------------
+  'legal.updated': 'Dernière mise à jour',
+  'legal.back': 'Retour à l’accueil',
+
+  // Infrastructure -------------------------------------------------------
+  'infrastructure.title': 'Infrastructure',
+  'infrastructure.lead':
+    'Du commit au navigateur : le chemin exact d’une mise en production, et les choix qui le rendent réversible.',
+  'infrastructure.architecture': 'Architecture de production',
+  'infrastructure.pipeline': 'Pipeline de déploiement',
+  'infrastructure.pipelineLead':
+    'Chaque étape est automatisée ; une CI rouge bloque la mise en production.',
+  'infrastructure.ci': 'Intégration continue',
+  'infrastructure.cd': 'Déploiement continu',
+  'infrastructure.monitoring': 'Supervision',
+  'infrastructure.stack': 'Stack complète',
+
   // Pied de page ----------------------------------------------------------
   'footer.tagline':
     'Ingénieur en développement digital et systèmes d’information — web, DevOps et IoT.',
   'footer.explore': 'Explorer',
   'footer.contact': 'Contact',
+  'footer.legal': 'Informations légales',
+  'footer.notice': 'Mentions légales',
+  'footer.privacy': 'Confidentialité',
+  'footer.infrastructure': 'Infrastructure',
   'footer.navLabel': 'Liens de pied de page',
   'footer.builtWith': 'Construit avec Astro, Flask et Docker, déployé par GitHub Actions.',
   'footer.source': 'Code source',
@@ -202,7 +288,7 @@ const en: Record<UIKey, string> = {
   'home.contact.eyebrow': 'Contact',
   'home.contact.title': 'A project, an apprenticeship, a question?',
   'home.contact.lead':
-    'The form arrives in the next step. In the meantime, write to me directly by email.',
+    'A question, an apprenticeship or a project? The form is available on the contact page.',
   'home.contact.cta': 'Send a message',
 
   // Pages ----------------------------------------------------------------
@@ -218,17 +304,101 @@ const en: Record<UIKey, string> = {
   'blog.lead': 'Field notes on building, deploying and operating applications. [TO COMPLETE]',
   'contact.title': 'Contact',
   'contact.lead':
-    'The form (validation, honeypot and rate limiting) will be added in the next step. Until then: hosayni92@gmail.com.',
+    'A project, an apprenticeship or simply a question? Fill in the form below: I usually reply within a few working days.',
 
   // Divers ---------------------------------------------------------------
   'common.comingSoon':
     '[TO COMPLETE] This section will be filled with the real content in the next step of the project.',
   'common.backHome': 'Back to home',
 
+  // Projets --------------------------------------------------------------
+  'projects.filterLabel': 'Filter by technology',
+  'projects.filterAll': 'All',
+  'projects.countOne': '1 project shown',
+  'projects.countMany': '{count} projects shown',
+  'projects.empty': 'No project matches this filter.',
+  'projects.caseStudy': 'View case study',
+  'project.role': 'Role',
+  'project.duration': 'Duration',
+  'project.year': 'Year',
+  'project.stack': 'Stack',
+  'project.architecture': 'Architecture',
+  'project.challenges': 'Challenges',
+  'project.results': 'Results',
+  'project.demo': 'View demo',
+  'project.repo': 'Source code',
+  'project.back': 'All projects',
+  'project.screenshots': 'Screenshots',
+  'project.screenshotsNote': '[TO COMPLETE: add 2 to 4 screenshots with alt text.]',
+  'project.next': 'Next project',
+  'project.previous': 'Previous project',
+
+  // Compétences ----------------------------------------------------------
+  'skills.legend': 'Level',
+  'skills.level.advanced': 'Advanced',
+  'skills.level.intermediate': 'Intermediate',
+  'skills.level.beginner': 'Familiar',
+
+  // Parcours -------------------------------------------------------------
+  'career.timelineLabel': 'Career timeline',
+  'career.education': 'Education',
+  'career.experience': 'Experience',
+  'career.certification': 'Certification',
+  'career.present': 'Ongoing',
+
+  // Blog -----------------------------------------------------------------
+  'blog.readingTime': 'min read',
+  'blog.published': 'Published on',
+  'blog.updated': 'Updated on',
+  'blog.toc': 'On this page',
+  'blog.tags': 'Tags',
+  'blog.noPosts': 'No articles yet.',
+  'blog.back': 'All articles',
+  'blog.rss': 'RSS feed',
+  'blog.postsCount': '{count} article(s)',
+
+  // Contact --------------------------------------------------------------
+  'contact.name': 'Name',
+  'contact.email': 'Email',
+  'contact.message': 'Message',
+  'contact.namePlaceholder': 'Your name',
+  'contact.emailPlaceholder': 'you@example.com',
+  'contact.messagePlaceholder': 'Describe your project or question…',
+  'contact.submit': 'Send message',
+  'contact.sending': 'Sending…',
+  'contact.success': 'Message sent. Thank you, I will reply shortly.',
+  'contact.error': 'Sending failed. Try again in a moment or write to hosayni92@gmail.com.',
+  'contact.consent': 'I agree that my data may be used to reply to this message.',
+  'contact.privacy': 'privacy policy',
+  'contact.required': 'This field is required.',
+  'contact.emailInvalid': 'Enter a valid email address.',
+  'contact.tooShort': 'The message must be at least 20 characters long.',
+  'contact.direct': 'Or write directly to',
+
+  // Pages légales --------------------------------------------------------
+  'legal.updated': 'Last updated',
+  'legal.back': 'Back to home',
+
+  // Infrastructure -------------------------------------------------------
+  'infrastructure.title': 'Infrastructure',
+  'infrastructure.lead':
+    'From commit to browser: the exact path of a production release, and the choices that make it reversible.',
+  'infrastructure.architecture': 'Production architecture',
+  'infrastructure.pipeline': 'Deployment pipeline',
+  'infrastructure.pipelineLead': 'Every step is automated; a red CI blocks the production release.',
+  'infrastructure.ci': 'Continuous integration',
+  'infrastructure.cd': 'Continuous deployment',
+  'infrastructure.monitoring': 'Monitoring',
+  'infrastructure.stack': 'Full stack',
+
   // Pied de page ----------------------------------------------------------
   'footer.tagline': 'Digital development and information systems engineer — web, DevOps and IoT.',
   'footer.explore': 'Explore',
   'footer.contact': 'Contact',
+  'footer.legal': 'Legal information',
+  'footer.notice': 'Legal notice',
+  'footer.privacy': 'Privacy',
+  'footer.infrastructure': 'Infrastructure',
   'footer.navLabel': 'Footer links',
   'footer.builtWith': 'Built with Astro, Flask and Docker, deployed by GitHub Actions.',
   'footer.source': 'Source code',
