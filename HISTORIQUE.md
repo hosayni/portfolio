@@ -139,7 +139,7 @@ web/
 ## Étape 3 — Contenu réel : projets, compétences, parcours, blog, contact
 
 - **Date :** 2026-10-29
-- **Commit :** `bcf5e91` — `feat(web): ajoute le contenu éditorial, le blog et le formulaire de contact`
+- **Commit :** `842bc67` — `feat(web): ajoute le contenu éditorial, le blog et le formulaire de contact`
 
 ### Objectif
 
