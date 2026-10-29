@@ -1,0 +1,49 @@
+{
+  "$comment": "Exceptions temporaires au blocage npm audit. Toute entrée doit avoir une justification, une date d'expiration et être réévaluée avant celle-ci. Voir docs/CI.md.",
+  "policy": "Astro 5 est imposé par le cahier des charges, alors que les correctifs de ces avis ne sont publiés que pour Astro 6/7 et sharp/zod plus récents. Le site est entièrement statique : aucun contenu utilisateur n'est rendu, aucune image distante n'est optimisée à l'exécution, et le serveur de développement n'est jamais exposé en production.",
+  "expires": "2027-03-31",
+  "advisories": [
+    {
+      "id": "GHSA-26w7-cxv4-gfx2",
+      "package": "astro",
+      "severity": "critical",
+      "reason": "RCE via l'optimisation d'images AVIF. Les images sont locales, versionnées et optimisées au build ; aucun téléversement ni rendu à la demande."
+    },
+    {
+      "id": "GHSA-2pvr-wf23-7pc7",
+      "package": "astro",
+      "severity": "high",
+      "reason": "SSRF via l'en-tête Host sur la page d'erreur prérendue. Le site n'utilise ni rendu serveur ni récupération d'URL distante à l'exécution."
+    },
+    {
+      "id": "GHSA-8hv8-536x-4wqp",
+      "package": "astro",
+      "severity": "high",
+      "reason": "XSS via un nom de slot non échappé. Les slots sont définis dans le dépôt et ne contiennent aucune donnée utilisateur."
+    },
+    {
+      "id": "GHSA-f88m-g3jw-g9cj",
+      "package": "sharp",
+      "severity": "high",
+      "reason": "Vulnérabilités héritées de libvips. sharp ne traite que les images de confiance du dépôt, au moment du build."
+    },
+    {
+      "id": "GHSA-rgj7-g3m4-5g8c",
+      "package": "sharp",
+      "severity": "high",
+      "reason": "Vulnérabilités libheif. Aucun fichier HEIF fourni par un utilisateur n'est décodé ; les visuels sont des placeholders locaux."
+    },
+    {
+      "id": "GHSA-wq5f-xc86-pv6w",
+      "package": "sharp",
+      "severity": "high",
+      "reason": "Vulnérabilité librsvg. Aucun SVG utilisateur n'est converti ; le favicon est servi tel quel."
+    },
+    {
+      "id": "GHSA-mrhx-c7xc-m3w5",
+      "package": "zod",
+      "severity": "high",
+      "reason": "Épuisement mémoire lors de la validation de collections surdimensionnées. Les schémas valident uniquement le Markdown du dépôt, au build."
+    }
+  ]
+}
