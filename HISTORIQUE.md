@@ -654,3 +654,33 @@ README.md                            # statut étape 8
 - Build : 27 pages + `sitemap-index.xml`.
 - Playwright : 4 tests réussis.
 - Lighthouse : seuil performance désormais bloquant (médiane de 5 runs).
+
+## Étape 9 — Monitoring (Uptime Kuma, healthchecks, alertes)
+
+### Résumé
+
+Ajout d’une stack de supervision séparée (`deploy/docker-compose.monitoring.yml`)
+avec Uptime Kuma, exposé uniquement en local, et d’une documentation complète
+(`docs/MONITORING.md`) pour les moniteurs, alertes, page de statut, incident et
+sauvegarde.
+
+### Fichiers
+
+```text
+deploy/docker-compose.monitoring.yml   # Uptime Kuma isolé, port 127.0.0.1:3001
+docs/MONITORING.md                    # installation, moniteurs, alertes, incident
+README.md                             # statut étape 9
+```
+
+### Vérifications
+
+- Compose de monitoring à valider avec `docker compose -f ... config`.
+- Uptime Kuma non exposé publiquement ; accès par tunnel SSH.
+- Moniteurs recommandés : site `/fr/` et API `/api/health/`.
+- Limitation assumée : supervision auto-hébergée sur le même VPS.
+
+### Notes
+
+- Les healthchecks Docker existants restent la première ligne de défense.
+- Une sonde externe gratuite peut compléter Uptime Kuma pour détecter une
+  panne totale du VPS.
