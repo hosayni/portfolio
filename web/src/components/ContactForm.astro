@@ -10,6 +10,7 @@ interface Props {
 const { lang } = Astro.props;
 const t = useTranslations(lang);
 const privacyHref = legalPath(lang, 'privacy');
+const contactEnabled = import.meta.env.PUBLIC_CONTACT_ENABLED !== 'false';
 const messages = {
   required: t('contact.required'),
   email: t('contact.emailInvalid'),
@@ -20,6 +21,16 @@ const messages = {
 };
 ---
 
+{!contactEnabled && (
+  <div class="mb-6 grid gap-3 border-b border-line pb-6">
+    <p class="eyebrow">{t('contact.disabledTitle')}</p>
+    <p class="text-sm leading-relaxed text-muted">{t('contact.disabled')}</p>
+    <a class="btn w-fit" href="mailto:hosayni92@gmail.com">
+      {t('contact.disabledCta')}
+    </a>
+  </div>
+)}
+
 <form
   id="contact-form"
   class="grid gap-5"
@@ -27,6 +38,7 @@ const messages = {
   action="/api/contact/"
   data-lang={lang}
   data-messages={JSON.stringify(messages)}
+  hidden={!contactEnabled}
 >
   <div>
     <label class="field-label" for="contact-name">

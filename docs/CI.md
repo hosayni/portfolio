@@ -1,29 +1,31 @@
 # Intégration continue (CI)
 
 Le workflow [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) vérifie
-chaque pull request et chaque push sur une branche de travail. Il ne déploie
-rien : la mise en production est traitée par `deploy.yml` à l'étape 7.
+chaque pull request et chaque push, y compris sur `main`. Le déploiement est
+traité par `deploy.yml` à l'étape 7, qui attend une CI verte sur `main`.
 
 ```mermaid
 flowchart LR
-    PR[Pull request<br/>ou push hors main] --> W[web<br/>lint · types · build]
+    PR[Pull request<br/>ou push] --> W[web<br/>lint · types · build]
     W --> E[e2e<br/>Playwright]
     W --> L[lighthouse<br/>5 runs par page]
     PR --> A[api<br/>Ruff · Pytest]
     PR --> S[security<br/>npm · pip]
     PR --> Q[codeql<br/>JS/TS · Python]
+    A & W --> M[main<br/>CI verte → deploy.yml]
 ```
 
 ## Déclencheurs et concurrence
 
 - `pull_request` : toutes les PR, y compris les mises à jour Dependabot.
-- `push` : toutes les branches **sauf `main`**, pour ne pas doublonner avec le
-  futur workflow de déploiement.
+- `push` : toutes les branches, y compris `main`, pour valider le commit
+  fusionné avant déploiement.
 - `workflow_dispatch` : relance manuelle possible.
 - `concurrency` : une nouvelle exécution sur la même référence annule la
   précédente ; inutile de tester un commit déjà obsolète.
 - Permissions par défaut : `contents: read` uniquement. Le job CodeQL demande
   explicitement `security-events: write` pour publier ses résultats.
+- `deploy.yml` se déclenche par `workflow_run` après une CI verte sur `main`.
 
 ## Jobs
 

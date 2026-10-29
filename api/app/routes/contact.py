@@ -25,6 +25,17 @@ def _read_payload() -> dict[str, Any]:
 @bp.post("/contact")
 @limiter.limit(lambda: current_app.config["CONTACT_RATE_LIMIT"])
 def contact():
+    if not current_app.config.get("CONTACT_ENABLED", True):
+        current_app.logger.info(
+            "contact_disabled",
+            extra={"event": "contact_disabled"},
+        )
+        raise ApiError(
+            "contact_disabled",
+            "The contact form is temporarily unavailable.",
+            503,
+        )
+
     raw = _read_payload()
     result = validate_contact(raw)
 

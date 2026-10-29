@@ -57,6 +57,7 @@ class Config:
         ("http://localhost:4321", "https://hosayni.com"),
     )
 
+    CONTACT_ENABLED = _as_bool("CONTACT_ENABLED", True)
     CONTACT_RATE_LIMIT = os.getenv("CONTACT_RATE_LIMIT", "5 per hour")
     RATELIMIT_STORAGE_URI = os.getenv("RATELIMIT_STORAGE_URI", "memory://")
     RATELIMIT_ENABLED = _as_bool("RATELIMIT_ENABLED", True)
@@ -95,16 +96,21 @@ def validate_production_config(config: dict) -> None:
 
     if config.get("SECRET_KEY") in (None, "", "change-me-in-production"):
         problems.append("SECRET_KEY")
-    if not config.get("SMTP_HOST"):
-        problems.append("SMTP_HOST")
-    if not config.get("SMTP_FROM"):
-        problems.append("SMTP_FROM")
-    if not config.get("CONTACT_TO"):
-        problems.append("CONTACT_TO")
     if not config.get("CORS_ORIGINS"):
         problems.append("CORS_ORIGINS")
-    if config.get("MAIL_SUPPRESS_SEND"):
-        problems.append("MAIL_SUPPRESS_SEND")
+
+    # Le formulaire peut rester désactivé tant qu'aucun SMTP n'est configuré :
+    # l'API démarre alors sans dépendre d'un serveur mail, et /api/contact
+    # répond 503. Dès que CONTACT_ENABLED=true, SMTP devient obligatoire.
+    if config.get("CONTACT_ENABLED", True):
+        if not config.get("SMTP_HOST"):
+            problems.append("SMTP_HOST")
+        if not config.get("SMTP_FROM"):
+            problems.append("SMTP_FROM")
+        if not config.get("CONTACT_TO"):
+            problems.append("CONTACT_TO")
+        if config.get("MAIL_SUPPRESS_SEND"):
+            problems.append("MAIL_SUPPRESS_SEND")
 
     if problems:
         joined = ", ".join(problems)

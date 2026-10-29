@@ -1,5 +1,6 @@
 // @ts-check
 import mdx from '@astrojs/mdx';
+import sitemap from '@astrojs/sitemap';
 import { defineConfig } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
 
@@ -49,5 +50,17 @@ export default defineConfig({
       },
     },
   },
-  integrations: [mdx()],
+  integrations: [
+    mdx(),
+    sitemap({
+      // Alternates FR/EN dans le sitemap pour les moteurs de recherche.
+      i18n: {
+        defaultLocale: 'fr',
+        locales: {
+          fr: 'fr',
+          en: 'en',
+        },
+      },
+    }),
+  ],
 });

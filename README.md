@@ -6,8 +6,9 @@ Portfolio professionnel bilingue (FR/EN), rapide et optimisé pour le référenc
 [![Deploy](https://github.com/hosayni/portfolio/actions/workflows/deploy.yml/badge.svg)](https://github.com/hosayni/portfolio/actions/workflows/deploy.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-> **État du projet :** en construction — étape 6/10 (CI : GitHub Actions, Playwright, Lighthouse CI, audits de sécurité et Dependabot).
-> Le déploiement et la supervision sont ajoutés aux étapes suivantes (voir la [feuille de route](#feuille-de-route)).
+> **État du projet :** en construction — étape 7/10 (CD : publication ghcr.io,
+> déploiement SSH automatique, rollback et durcissement VPS documentés).
+> La supervision et la documentation finale sont ajoutées aux étapes suivantes.
 
 ---
 
@@ -234,9 +235,9 @@ verte et branches à jour avant fusion.
 
 ## Déploiement
 
-Le Compose de production et le Caddyfile sont prêts (étape 5). La procédure
-détaillée de mise en production, de publication `ghcr.io`, de déploiement SSH
-et de rollback est traitée à l'étape 7/10 :
+Le Compose de production, le Caddyfile et le workflow CD sont prêts (étape 7).
+La procédure complète de mise en production, de publication `ghcr.io`, de
+déploiement SSH, de durcissement VPS et de rollback est documentée dans
 [`docs/DEPLOIEMENT.md`](docs/DEPLOIEMENT.md). En résumé : push sur `main` → CI →
 images publiées sur `ghcr.io` → déploiement sur le VPS → healthcheck → rollback
 automatique en cas d'échec.
@@ -249,7 +250,7 @@ automatique en cas d'échec.
 - [x] **4. API Flask** — endpoint santé, projets GitHub avec cache, contact validé et limité
 - [x] **5. Docker** — images multi-stage non-root, nginx, Compose de développement et de production
 - [x] **6. CI** — GitHub Actions, Playwright, Lighthouse CI, audits de sécurité, CodeQL, Dependabot
-- [ ] **7. CD et VPS** — publication ghcr.io, déploiement, Caddy, durcissement
+- [x] **7. CD et VPS** — publication ghcr.io, déploiement, Caddy, durcissement
 - [ ] **8. SEO et performance** — JSON-LD, sitemap, RSS, Lighthouse ≥ 95
 - [ ] **9. Monitoring** — Uptime Kuma, healthchecks, alertes
 - [ ] **10. Documentation** — guide de déploiement, checklist de livraison

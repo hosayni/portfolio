@@ -16,5 +16,6 @@ def health():
         status="ok",
         version=current_app.config.get("VERSION", "0.0.0"),
         environment=current_app.config.get("APP_ENV", "development"),
+        contact_enabled=bool(current_app.config.get("CONTACT_ENABLED", True)),
         uptime_seconds=max(0, int(time.monotonic() - started)),
     )

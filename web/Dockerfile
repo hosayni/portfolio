@@ -32,6 +32,13 @@ CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
 # Cible de production : le build statique est copié dans nginx.
 FROM base AS build
 
+# Valeurs injectées par la CI de déploiement. Les valeurs par défaut gardent un
+# build local identique à la CI de validation.
+ARG SITE_URL=https://hosayni.com
+ARG PUBLIC_CONTACT_ENABLED=true
+ENV SITE_URL=$SITE_URL \
+    PUBLIC_CONTACT_ENABLED=$PUBLIC_CONTACT_ENABLED
+
 RUN npm run build
 
 FROM nginx:1.30.6-alpine3.24 AS runtime

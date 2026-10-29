@@ -570,3 +570,58 @@ docs/CI.md                       # procédure, seuils, sécurité, branche main
 - La protection de branche ne peut pas être versionnée dans le dépôt ; la
   checklist est dans `docs/CI.md`.
 - Aucun secret, aucune image et aucun push : `deploy.yml` arrive à l'étape 7.
+
+## Étape 7 — CD et VPS (publication ghcr.io, déploiement, durcissement, rollback)
+
+### Résumé
+
+Ajout du déploiement continu : workflow `deploy.yml` déclenché par CI verte sur
+`main`, publication des images `web` et `api` sur `ghcr.io` par SHA, déploiement
+SSH sur le VPS avec rollback automatique, durcissement VPS documenté et
+désactivation initiale du formulaire de contact (pas de SMTP).
+
+### Décisions
+
+- **Déclenchement** : `workflow_run` après `CI` verte sur `main` ; la CI tourne
+  aussi sur `main`. Un seul déploiement à la fois (`concurrency`).
+- **Images** : `linux/amd64`, tags `sha-<commit>` (immuable) et `latest`,
+  cache Buildx dans GitHub Actions.
+- **Authentification VPS** : session Docker éphémère avec le `GITHUB_TOKEN`
+  (`read:packages`) dans un répertoire de configuration temporaire nettoyé.
+- **Déploiement** : `tar` des fichiers de déploiement puis `deploy.sh <tag>` sur
+  le VPS. Vérification publique de `/api/health/` et `/fr/`.
+- **Rollback** : automatique vers `.deployed-tag` si le démarrage ou le
+  healthcheck échoue.
+- **Premier déploiement sans SMTP** : `CONTACT_ENABLED=false` (API) et
+  `PUBLIC_CONTACT_ENABLED=false` (build frontend). Le formulaire est masqué et
+  `/api/contact` répond 503. Activation documentée dans `docs/DEPLOIEMENT.md`.
+- **Formulaire** : `ContactForm.astro` masque le formulaire et affiche une
+  notice avec l'adresse email quand `PUBLIC_CONTACT_ENABLED=false`.
+
+### Fichiers
+
+```text
+.github/workflows/deploy.yml
+deploy/deploy.sh
+docs/adr/0003-deploiement-continu.md
+docs/DEPLOIEMENT.md              # réécrit pour l'étape 7
+api/app/config.py                # CONTACT_ENABLED, validation conditionnelle
+api/app/routes/contact.py        # 503 contact_disabled si désactivé
+api/app/routes/health.py         # champ contact_enabled
+web/Dockerfile                   # ARG SITE_URL et PUBLIC_CONTACT_ENABLED
+web/src/components/ContactForm.astro
+web/src/env.d.ts
+web/src/i18n/ui.ts               # contact.disabled*
+.env.example                     # CONTACT_ENABLED
+deploy/.env.example              # CONTACT_ENABLED=false + valeurs de prod
+docs/CI.md                       # CI sur main, déclenchement deploy.yml
+README.md                        # statut étape 7
+```
+
+### Vérifications
+
+- Tests API à relancer après modifications (`pytest`, `ruff`).
+- `bash -n deploy/deploy.sh` : syntaxe valide.
+- `actionlint` à relancer sur `deploy.yml`.
+- Workflow non exécuté sur GitHub : aucun push effectué. Validation locale
+  uniquement.

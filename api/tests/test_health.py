@@ -16,6 +16,7 @@ def test_health_returns_status_and_version(client: FlaskClient) -> None:
     assert body["status"] == "ok"
     assert body["version"] == "0.1.0-test"
     assert body["environment"] == "test"
+    assert body["contact_enabled"] is True
     assert body["uptime_seconds"] >= 0
 
 

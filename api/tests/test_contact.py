@@ -141,6 +141,25 @@ def test_mail_not_configured_returns_503(
     assert response.get_json()["error"] == "mail_unavailable"
 
 
+def test_disabled_contact_returns_503_without_sending(
+    make_app: Callable[..., Flask], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    called = False
+
+    def fail_if_called(config: dict, contact: ContactMessage) -> None:
+        nonlocal called
+        called = True
+
+    monkeypatch.setattr(mail, "send_contact_email", fail_if_called)
+
+    app = make_app(CONTACT_ENABLED=False)
+    response = post_contact(app.test_client())
+
+    assert response.status_code == 503
+    assert response.get_json()["error"] == "contact_disabled"
+    assert called is False
+
+
 def test_mail_delivery_failure_returns_503(
     client: FlaskClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:

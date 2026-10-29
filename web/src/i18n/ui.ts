@@ -198,6 +198,10 @@ const fr = {
   'contact.emailInvalid': 'Saisissez une adresse email valide.',
   'contact.tooShort': 'Le message doit contenir au moins 20 caractères.',
   'contact.direct': 'Ou écrivez directement à',
+  'contact.disabledTitle': 'Formulaire momentanément indisponible',
+  'contact.disabled':
+    'Le formulaire de contact est en cours de configuration. En attendant, écrivez-moi directement par email : je réponds sous quelques jours ouvrés.',
+  'contact.disabledCta': 'Écrire un email',
 
   // Pages légales --------------------------------------------------------
   'legal.updated': 'Dernière mise à jour',
@@ -403,6 +407,10 @@ const en: Record<UIKey, string> = {
   'contact.emailInvalid': 'Enter a valid email address.',
   'contact.tooShort': 'The message must be at least 20 characters long.',
   'contact.direct': 'Or write directly to',
+  'contact.disabledTitle': 'Contact form temporarily unavailable',
+  'contact.disabled':
+    'The contact form is being configured. In the meantime, write to me directly by email: I reply within a few working days.',
+  'contact.disabledCta': 'Send an email',
 
   // Pages légales --------------------------------------------------------
   'legal.updated': 'Last updated',

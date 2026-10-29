@@ -1,0 +1,197 @@
+name: Deploy
+
+# Déploiement continu. Se déclenche uniquement après une CI verte sur `main`,
+# puis publie les images sur ghcr.io et met le VPS à jour par SSH. Aucun secret
+# de déploiement n'est stocké dans le dépôt : ils viennent des secrets GitHub.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+# Moindre privilège par défaut ; chaque job demande uniquement ce dont il a
+# besoin.
+permissions:
+  contents: read
+
+# Un seul déploiement à la fois : éviter que deux exécutions se marchent dessus.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ghcr.io/${{ vars.GHCR_OWNER || 'hosayni' }}
+  HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+  IMAGE_TAG: sha-${{ github.event.workflow_run.head_sha }}
+  SITE_URL: ${{ vars.SITE_URL || 'https://hosayni.com' }}
+  DEPLOY_DIR: /opt/portfolio
+  REMOTE_DOCKER_CONFIG: /tmp/portfolio-ghcr-${{ github.run_id }}
+
+jobs:
+  images:
+    name: images
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Récupérer le commit validé par la CI
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ env.HEAD_SHA }}
+          fetch-depth: 1
+
+      - name: Installer Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Se connecter à ghcr.io
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Construire et publier l'image web
+        uses: docker/build-push-action@v7
+        with:
+          context: ./web
+          file: ./web/Dockerfile
+          target: runtime
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}/portfolio-web:${{ env.IMAGE_TAG }}
+            ${{ env.IMAGE_PREFIX }}/portfolio-web:latest
+          build-args: |
+            SITE_URL=${{ env.SITE_URL }}
+            PUBLIC_CONTACT_ENABLED=${{ vars.PUBLIC_CONTACT_ENABLED || 'false' }}
+          labels: |
+            org.opencontainers.image.title=portfolio-web
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ env.HEAD_SHA }}
+            org.opencontainers.image.version=${{ env.IMAGE_TAG }}
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web
+
+      - name: Construire et publier l'image api
+        uses: docker/build-push-action@v7
+        with:
+          context: ./api
+          file: ./api/Dockerfile
+          target: runtime
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}/portfolio-api:${{ env.IMAGE_TAG }}
+            ${{ env.IMAGE_PREFIX }}/portfolio-api:latest
+          labels: |
+            org.opencontainers.image.title=portfolio-api
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ env.HEAD_SHA }}
+            org.opencontainers.image.version=${{ env.IMAGE_TAG }}
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,mode=max,scope=api
+
+  deploy:
+    name: deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: images
+    permissions:
+      contents: read
+      packages: read
+    environment:
+      name: production
+      url: https://hosayni.com
+    env:
+      VPS_HOST: ${{ secrets.VPS_HOST }}
+      VPS_USER: ${{ secrets.VPS_USER }}
+      VPS_PORT: ${{ secrets.VPS_PORT || '22' }}
+      GHCR_USER: ${{ github.actor }}
+      GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Récupérer les fichiers de déploiement
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ env.HEAD_SHA }}
+          fetch-depth: 1
+
+      - name: Vérifier les secrets requis
+        run: |
+          set -eu
+          test -n "${VPS_HOST:?secret VPS_HOST manquant}" || true
+          test -n "${VPS_USER:?secret VPS_USER manquant}" || true
+          test -n "${GHCR_TOKEN:?jeton GitHub manquant}" || true
+
+      - name: Préparer la clé SSH
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+        run: |
+          set -eu
+          test -n "${VPS_SSH_KEY:?secret VPS_SSH_KEY manquant}"
+          test -n "${VPS_KNOWN_HOSTS:?secret VPS_KNOWN_HOSTS manquant}"
+          install -m 700 -d "$HOME/.ssh"
+          printf '%s\n' "$VPS_SSH_KEY" > "$HOME/.ssh/portfolio_deploy"
+          chmod 600 "$HOME/.ssh/portfolio_deploy"
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/known_hosts"
+
+      - name: Préparer la commande SSH
+        run: |
+          cat > "$RUNNER_TEMP/portfolio-ssh" <<'EOF'
+          #!/usr/bin/env bash
+          set -eu
+          ssh \
+            -i "$HOME/.ssh/portfolio_deploy" \
+            -p "$VPS_PORT" \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            -o ConnectTimeout=10 \
+            "$VPS_USER@$VPS_HOST" "$@"
+          EOF
+          chmod +x "$RUNNER_TEMP/portfolio-ssh"
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+
+      - name: Vérifier l'accès Docker sur le VPS
+        run: |
+          portfolio-ssh "docker info >/dev/null 2>&1 || { echo 'deploy n'a pas accès à Docker'; exit 1; }"
+
+      - name: Vérifier la configuration de production sur le VPS
+        run: |
+          portfolio-ssh "test -f '$DEPLOY_DIR/.env' || { echo 'deploy/.env manquant sur le VPS'; exit 1; }"
+
+      - name: Authentifier le VPS auprès de ghcr.io
+        run: |
+          printf '%s' "$GHCR_TOKEN" | portfolio-ssh \
+            "install -d -m 700 '$REMOTE_DOCKER_CONFIG' && DOCKER_CONFIG='$REMOTE_DOCKER_CONFIG' docker login '$REGISTRY' --username '$GHCR_USER' --password-stdin"
+
+      - name: Copier les fichiers de déploiement
+        run: |
+          tar -C deploy -czf - docker-compose.prod.yml Caddyfile deploy.sh \
+            | portfolio-ssh "mkdir -p '$DEPLOY_DIR' && tar -C '$DEPLOY_DIR' -xzf -"
+
+      - name: Déployer
+        run: |
+          portfolio-ssh "cd '$DEPLOY_DIR' && DOCKER_CONFIG='$REMOTE_DOCKER_CONFIG' bash deploy.sh '$IMAGE_TAG'"
+
+      - name: Vérifier depuis GitHub Actions
+        run: |
+          curl -fsS --retry 10 --retry-delay 5 --retry-all-errors \
+            "$SITE_URL/api/health/" >/dev/null
+          curl -fsS --retry 10 --retry-delay 5 --retry-all-errors \
+            "$SITE_URL/fr/" >/dev/null
+
+      - name: Nettoyer l'authentification et les temporaires
+        if: always()
+        run: |
+          portfolio-ssh "DOCKER_CONFIG='$REMOTE_DOCKER_CONFIG' docker logout '$REGISTRY' >/dev/null 2>&1 || true; rm -rf '$REMOTE_DOCKER_CONFIG'" || true
+
+      - name: Afficher les logs en cas d'échec
+        if: failure()
+        run: |
+          portfolio-ssh "cd '$DEPLOY_DIR' && docker compose -f docker-compose.prod.yml ps || true; docker compose -f docker-compose.prod.yml logs --tail=200 || true" || true
