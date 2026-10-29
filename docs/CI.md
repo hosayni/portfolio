@@ -103,13 +103,12 @@ cd ../api
 | Accessibilité | 95 | **bloquant** |
 | Bonnes pratiques | 95 | **bloquant** |
 | SEO | 95 | **bloquant** |
-| Performance | 95 | avertissement, bloquant à l'étape 8 |
+| Performance | 95 | **bloquant** (depuis l'étape 8) |
 
 La performance est mesurée sur mobile avec la limitation CPU par défaut de
-Lighthouse (×4), cinq fois par page, puis agrégée par médiane. Sur une machine
-de développement partagée, le temps de blocage varie fortement (scores observés
-de 83 à 100 selon la charge) : le seuil de 95 deviendra bloquant à l'étape 8,
-après optimisation et mesure sur le runner dédié de GitHub Actions.
+Lighthouse (×4), cinq fois par page, puis agrégée par médiane. Elle est
+**bloquante à 95** depuis l'étape 8. Les résultats restent sensibles à la
+charge de la machine de mesure ; le runner GitHub dédié sert de référence.
 
 Les rapports sont écrits dans `web/.lighthouseci/` et publiés comme artefact.
 Aucun envoi vers un stockage public externe n'est effectué.
