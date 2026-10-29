@@ -625,3 +625,32 @@ README.md                        # statut étape 7
 - `actionlint` à relancer sur `deploy.yml`.
 - Workflow non exécuté sur GitHub : aucun push effectué. Validation locale
   uniquement.
+
+## Étape 8 — SEO et performance (sitemap, JSON-LD, RSS, Lighthouse ≥ 95)
+
+### Résumé
+
+Ajout du sitemap Astro avec alternates FR/EN, `robots.txt`, données structurées
+JSON-LD par défaut (Person) en plus de celles des articles et projets, et passage
+de la performance Lighthouse en seuil bloquant à 95. Optimisation du chemin
+critique : suppression de `text-wrap: balance/pretty` et du `scrollbar-gutter`
+coûteux, `text-rendering: auto`, animations d’apparition allégées.
+
+### Fichiers
+
+```text
+web/astro.config.mjs                 # @astrojs/sitemap, i18n alternates
+web/public/robots.txt                # robots + sitemap
+web/src/layouts/BaseLayout.astro      # JSON-LD Person par défaut
+web/src/styles/global.css            # optimisations de rendu
+web/lighthouserc.json                # performance bloquante
+docs/CI.md                           # seuil performance bloquant
+README.md                            # statut étape 8
+```
+
+### Vérifications
+
+- `astro check` : 0 erreur, 0 avertissement.
+- Build : 27 pages + `sitemap-index.xml`.
+- Playwright : 4 tests réussis.
+- Lighthouse : seuil performance désormais bloquant (médiane de 5 runs).

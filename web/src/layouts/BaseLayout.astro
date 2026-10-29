@@ -48,6 +48,16 @@ const defaultHref = absoluteAlternates.find(({ code }) => code === defaultLang)?
 
 const ogImage = image ? new URL(image, site).href : undefined;
 const jsonLdList = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
+// Données structurées minimales pour toutes les pages : personne et site.
+jsonLdList.push({
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: siteName,
+  url: site.href,
+  jobTitle: 'Ingénieur en développement digital et systèmes d’information',
+  email: 'mailto:hosayni92@gmail.com',
+  sameAs: ['https://github.com/hosayni/', 'https://www.linkedin.com/in/hosayni/'],
+});
 const serializedJsonLd = jsonLdList.map((data) => JSON.stringify(data).replace(/</g, '\\u003c'));
 ---
 

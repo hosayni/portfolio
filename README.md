@@ -223,8 +223,7 @@ Chaque pull request et chaque push hors `main` déclenche
 | `codeql` | analyse statique JavaScript/TypeScript et Python |
 
 Les seuils Lighthouse sont bloquants à **95** pour l'accessibilité, les bonnes
-pratiques et le SEO. La performance est mesurée sur mobile, cinq fois par page,
-et deviendra bloquante à 95 à l'étape 8, après optimisation sur le runner dédié.
+pratiques, le SEO et la performance (depuis l'étape 8).
 Les exceptions npm (Astro 5 imposé) sont justifiées et expirent le 31 mars 2027.
 Dépendances, seuils et protection de branche sont détaillés dans
 [`docs/CI.md`](docs/CI.md).
@@ -251,7 +250,7 @@ automatique en cas d'échec.
 - [x] **5. Docker** — images multi-stage non-root, nginx, Compose de développement et de production
 - [x] **6. CI** — GitHub Actions, Playwright, Lighthouse CI, audits de sécurité, CodeQL, Dependabot
 - [x] **7. CD et VPS** — publication ghcr.io, déploiement, Caddy, durcissement
-- [ ] **8. SEO et performance** — JSON-LD, sitemap, RSS, Lighthouse ≥ 95
+- [x] **8. SEO et performance** — JSON-LD, sitemap, RSS, Lighthouse ≥ 95
 - [ ] **9. Monitoring** — Uptime Kuma, healthchecks, alertes
 - [ ] **10. Documentation** — guide de déploiement, checklist de livraison
 
