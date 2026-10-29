@@ -346,4 +346,118 @@ requests `2.34.2`, Pytest `9.2.0`, pytest-cov `7.1.0`, Ruff `0.17.3`.
   router `/api/*` vers Flask sans réécriture.
 - Aucun push : la branche `feature/init` reste locale.
 
+---
+
+## Étape 5 — Docker : images multi-stage, nginx et Compose dev/prod
+
+- **Date :** 2026-10-29
+- **Commit :** `269722c` — `feat(docker): ajoute les images non-root et les Compose dev/prod`
+- **Branche :** `feature/init`
+
+### Objectif
+
+Conteneuriser les deux applications avec des images reproductibles et non-root,
+un Compose de développement avec rechargement à chaud, et un Compose de
+production prêt pour Caddy et `ghcr.io`. Ajouter les `.dockerignore`, les
+healthchecks, le cache nginx et un vrai 301 HTTP de `/` vers `/fr/`.
+
+### Décisions
+
+- **Web multi-stage** : `node:22.22-alpine3.24` pour le build, puis
+  `nginx:1.30.6-alpine3.24` pour le service statique. nginx tourne avec
+  l'utilisateur `nginx`, écoute sur `8080` et écrit PID/caches dans `/tmp` : aucun
+  privilège root dans le conteneur.
+- **Configuration nginx dédiée** : cache immuable sur `/_astro/`, cache d'une
+  semaine pour les images/polices publiques, compression, logs JSON, 404
+  interne, refus des fichiers cachés et en-têtes de sécurité (CSP, HSTS,
+  `X-Frame-Options`, `Permissions-Policy`).
+- **API multi-stage** : venv installé dans une étape `builder`, copié dans
+  `python:3.12.16-slim-trixie`. L'utilisateur `app` (UID 10001) exécute
+  Gunicorn `gthread` avec **un worker et quatre threads**. Le socket de contrôle
+  Gunicorn est désactivé (`--no-control-socket`) pour rester compatible avec le
+  système de fichiers en lecture seule.
+- **Compose de développement** : cibles `dev`, sources montées, volume nommé
+  `web_node_modules`, healthchecks, `init: true`, ports publiés uniquement sur
+  `127.0.0.1`. `.env` est optionnel ; les valeurs réelles restent hors du dépôt.
+- **Compose de production** : images `ghcr.io/<owner>/portfolio-{web,api}`,
+  Caddy sur 80/443 (HTTP/3), réseau privé sans ports web/api, `read_only` +
+  `tmpfs`, `no-new-privileges`, `cap_drop: ALL`, limites CPU/mémoire, logs
+  plafonnés et volumes `caddy_data`/`caddy_config`.
+- **Caddy** : TLS Let's Encrypt, redirection `www` → domaine principal,
+  compression zstd/gzip, routage `/api/*` vers Flask sans réécriture, en-têtes
+  HSTS et suppression de `Server`.
+- **Versions figées** : Node `22.22`, nginx `1.30.6`, Python `3.12.16`, Caddy
+  `2.11.7`. Elles seront suivies par Dependabot à l'étape 6.
+- **Documentation** : README mis à jour, `deploy/.env.example`,
+  `docs/DEPLOIEMENT.md` (base) et ADR `0002-docker-images-et-compose.md`.
+
+### Fichiers
+
+```text
+web/
+├── Dockerfile                 # base → dev / build → nginx runtime
+├── .dockerignore
+└── nginx/
+    ├── nginx.conf             # PID/caches dans /tmp, logs JSON, gzip
+    ├── default.conf           # 8080, 301 /, cache, 404, dotfiles
+    └── security-headers.conf  # CSP, HSTS, frame, permissions
+
+api/
+├── Dockerfile                 # builder venv → dev / runtime Gunicorn
+└── .dockerignore
+
+docker-compose.yml             # développement, hot reload, ports locaux
+deploy/
+├── docker-compose.prod.yml    # ghcr, Caddy, read_only, limites, réseau privé
+├── Caddyfile                  # TLS, www, /api/*, compression, logs
+└── .env.example               # modèle de production (aucun secret réel)
+
+docs/
+├── DEPLOIEMENT.md             # base de procédure et rollback manuel
+└── adr/0002-docker-images-et-compose.md
+```
+
+### Vérifications
+
+```text
+✔ docker compose config                        → dev valide
+✔ docker compose -f deploy/... config          → prod valide
+✔ docker compose build                         → images dev construites
+✔ docker compose up -d                         → api et web healthy
+✔ http://127.0.0.1:4321/fr/                    → 200, titre correct
+✔ http://127.0.0.1:4321/api/health/            → 200 via proxy Vite
+✔ http://127.0.0.1:8000/api/health             → 200 (API directe)
+✔ Rechargement Flask                           → détecté et worker relancé
+✔ docker build --target runtime (api)          → image 215 Mo
+✔ docker build --target runtime (web)          → image 94 Mo
+✔ nginx -t                                     → configuration valide
+✔ /healthz, /fr/, /_astro/*                    → 200 + cache + en-têtes
+✔ /, /fr                                       → 301 vers /fr/
+✔ 404 et fichier caché                         → 404 / 403
+✔ API image en mode production                 → healthy, logs Gunicorn propres
+✔ Pytest dans l'image Python 3.12              → 55 tests, 94,85 %
+✔ Compose prod + Caddy (TLS local)             → /fr/ 200, /api/health/ 200
+✔ Redirection www                              → 301 vers le domaine principal
+✔ caddy validate                               → configuration valide
+✔ npm run check / lint / format:check          → propres
+✔ npm run build                                → 27 pages
+✔ Liens internes                               → 28 pages, 0 lien mort
+```
+
+### Notes
+
+- Le test du Compose de production a utilisé `localhost` et l'autorité de
+  certification locale de Caddy. Un essai avec un vrai domaine et Let's Encrypt
+  reste à faire lors de la mise en ligne (étape 7).
+- `npm audit` signale 6 vulnérabilités (1 critique, 3 hautes, 2 basses) dans
+  l'arbre Astro 5 ; les correctifs proposés imposent Astro 7. La demande impose
+  Astro 5, et le site produit est statique : aucune entrée utilisateur n'est
+  rendue à l'exécution. Le point sera réévalué à l'étape 6 (analyse de sécurité)
+  et documenté si l'exception reste nécessaire.
+- La CSP autorise encore `'unsafe-inline'` pour les scripts inline du thème et
+  des animations ; une CSP par hashes est prévue à l'étape 8.
+- Le cache GitHub et le rate limiting restent en mémoire : un seul worker
+  Gunicorn. Redis est nécessaire avant de scaler.
+- Aucune image n'a été poussée sur `ghcr.io` et aucun push Git n'a été effectué.
+
 
