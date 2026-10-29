@@ -1,0 +1,49 @@
+# ---------------------------------------------------------------------------
+# Supervision : Uptime Kuma.
+#
+# Stack séparée du portfolio : elle peut être arrêtée/mise à jour sans toucher
+# au site. Uptime Kuma n'est exposé qu'en local ; l'accès se fait par tunnel SSH
+# ou derrière un sous-domaine Caddy (voir docs/MONITORING.md).
+#
+# Utilisation (sur le VPS, depuis deploy/) :
+#   docker compose -f docker-compose.monitoring.yml up -d
+# ---------------------------------------------------------------------------
+name: portfolio-monitoring
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "5m"
+    max-file: "2"
+
+services:
+  uptime-kuma:
+    image: louislam/uptime-kuma:2.2.1
+    container_name: uptime-kuma
+    restart: unless-stopped
+    pull_policy: always
+    ports:
+      # Exposé uniquement sur le loopback : pas d'accès public direct.
+      - "127.0.0.1:3001:3001"
+    volumes:
+      - uptime_kuma_data:/app/data
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    networks:
+      - monitoring
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
+
+networks:
+  monitoring:
+    driver: bridge
+
+volumes:
+  uptime_kuma_data:
+    driver: local

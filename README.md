@@ -251,7 +251,7 @@ automatique en cas d'échec.
 - [x] **6. CI** — GitHub Actions, Playwright, Lighthouse CI, audits de sécurité, CodeQL, Dependabot
 - [x] **7. CD et VPS** — publication ghcr.io, déploiement, Caddy, durcissement
 - [x] **8. SEO et performance** — JSON-LD, sitemap, RSS, Lighthouse ≥ 95
-- [ ] **9. Monitoring** — Uptime Kuma, healthchecks, alertes
+- [x] **9. Monitoring** — Uptime Kuma, healthchecks, alertes
 - [ ] **10. Documentation** — guide de déploiement, checklist de livraison
 
 ## Licence
