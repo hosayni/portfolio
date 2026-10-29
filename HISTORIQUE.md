@@ -239,3 +239,111 @@ Dépendances ajoutées, versions figées : `@astrojs/mdx@4.3.14`,
 - Le contenu Markdown est prêt pour MDX, mais les articles utilisent `.md` :
   aucun composant interactif n'est nécessaire pour l'instant.
 
+---
+
+## Étape 4 — API Flask : santé, dépôts GitHub et contact
+
+- **Date :** 2026-10-29
+- **Commit :** `1269a0a` — `feat(api): ajoute l'API Flask, le cache GitHub et le contact`
+- **Branche :** `feature/init`
+
+### Objectif
+
+Construire l'API interne : endpoint de santé pour Docker et la supervision,
+dépôts GitHub avec cache et repli, formulaire de contact validé, limité et
+envoyé par SMTP. Brancher le site Astro sur ces endpoints, avec dégradation
+gracieuse.
+
+### Décisions
+
+- **Application factory + blueprints** (`health`, `projects`, `contact`) et
+  configuration uniquement par variables d'environnement, chargées depuis
+  `api/.env` puis le `.env` racine.
+- **Validation manuelle stricte** plutôt que Pydantic : moins de dépendances,
+  erreurs par champ (`{"error":"validation_error","fields":{...}}`) et contrôle
+  explicite des types, longueurs, consentement et honeypot.
+- **Cache mémoire TTL** (1 h par défaut) pour les dépôts GitHub. En cas d'échec
+  et de cache périmé, l'API renvoie le cache avec `"stale": true` ; sans cache,
+  elle répond `503` et le site conserve ses projets statiques.
+- **Liste blanche `GITHUB_REPOS`** optionnelle, sinon les dépôts publics non
+  forké/non archivés les plus récemment poussés. Les langages de chaque dépôt
+  sont récupérés en parallèle (3 maximum), avec repli sur le langage principal.
+- **Rate limiting Flask-Limiter** par IP (`5 per hour` par défaut), stockage
+  mémoire adapté à un seul processus ; Redis documenté pour plusieurs workers.
+- **Contact SMTP synchrone** avec timeout, TLS explicite ou SSL implicite
+  (port 465), `Reply-To` et neutralisation des retours à la ligne dans les
+  en-têtes. En développement, `MAIL_SUPPRESS_SEND=true` journalise sans envoyer.
+- **Production sûre par défaut** : la factory refuse de démarrer si
+  `SECRET_KEY`, `SMTP_HOST`, `SMTP_FROM`, `CONTACT_TO` ou `CORS_ORIGINS`
+  manquent, ou si `MAIL_SUPPRESS_SEND=true`.
+- **Sécurité transverse** : CORS restreint, en-têtes de sécurité, CSP, HSTS
+  derrière HTTPS, corps limité à 16 Ko, erreurs JSON homogènes, `ProxyFix`
+  activé uniquement via `TRUST_PROXY=true`.
+- **Logs JSON** avec identifiant de requête, méthode, chemin, statut et durée ;
+  aucune donnée personnelle (nom, e-mail, message) n'est journalisée.
+- **Intégration Astro** : proxy Vite `/api` → Flask en développement, puis
+  Caddy en production. Les appels utilisent un slash final (`/api/projects/`,
+  `/api/contact/`) à cause de `trailingSlash: 'always'` d'Astro ; Flask accepte
+  les deux formes (`strict_slashes = False`).
+- **Section GitHub progressive** sur la page Projets : chargement client,
+  rendu DOM sans `innerHTML`, liens `https:` uniquement, message d'erreur et
+  repli `<noscript>` ; les projets éditoriaux restent la source principale.
+
+### Fichiers
+
+```text
+api/
+├── app/
+│   ├── __init__.py          # factory, CORS, en-têtes, hooks, erreurs
+│   ├── config.py            # environnement + validation production
+│   ├── errors.py            # ApiError et handlers JSON
+│   ├── extensions.py        # Limiter
+│   ├── logging_config.py    # formatter JSON
+│   ├── validation.py        # ContactMessage + règles
+│   ├── routes/              # health, projects, contact
+│   └── services/            # github.py (cache TTL), mail.py (SMTP)
+├── tests/                   # 55 tests, réseau et SMTP simulés
+├── pyproject.toml           # Ruff, Pytest, couverture ≥ 80 %
+├── requirements*.txt        # versions épinglées
+└── wsgi.py
+
+web/src/components/GitHubRepos.astro
+web/src/components/ContactForm.astro   # action /api/contact/
+web/astro.config.mjs                   # proxy Vite /api
+```
+
+Dépendances Python épinglées : Flask `3.1.3`, Flask-Cors `6.0.5`,
+Flask-Limiter `4.1.1`, Gunicorn `26.2.0`, python-dotenv `1.2.4`,
+requests `2.34.2`, Pytest `9.2.0`, pytest-cov `7.1.0`, Ruff `0.17.3`.
+
+### Vérifications
+
+```text
+✔ .venv/bin/pytest             → 55 tests, 94,85 % de couverture (seuil 80 %)
+✔ Ruff check + format          → propres
+✔ API locale                   → /api/health, /api/contact et erreurs JSON testés
+✔ Contact via proxy Astro      → 200, e-mail journalisé (suppression en dev)
+✔ Formulaire navigateur        → validation JS, envoi, état succès, reset
+✔ GitHub indisponible          → 503 JSON ; message de repli affiché, zéro JS cassé
+✔ Rendu GitHub (stub local)    → 2 cartes, dates FR/EN, liens https, 0 débordement
+✔ npm run check                → 0 erreur, 0 warning (35 fichiers)
+✔ npm run lint / format:check  → propres
+✔ npm run build                → 27 pages
+✔ Liens internes               → 28 pages, 0 lien mort
+```
+
+### Notes
+
+- Le réseau de l'environnement de développement ne joint pas
+  `api.github.com` (timeout) : le chemin réel a été validé par les tests avec
+  mocks et par un stub local ; un essai avec token reste à faire sur une machine
+  connectée.
+- Le rate limiting et le cache GitHub sont en mémoire : un seul worker Gunicorn
+  pour l'instant, ou Redis aux étapes suivantes.
+- L'envoi SMTP est synchrone ; une file de tâches sera envisagée si le trafic
+  augmente.
+- Les URLs front utilisent un slash final ; le Caddyfile de l'étape 7 devra
+  router `/api/*` vers Flask sans réécriture.
+- Aucun push : la branche `feature/init` reste locale.
+
+
