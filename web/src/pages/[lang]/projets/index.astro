@@ -1,4 +1,5 @@
 ---
+import GitHubRepos from '@/components/GitHubRepos.astro';
 import PageHeader from '@/components/PageHeader.astro';
 import ProjectCard from '@/components/ProjectCard.astro';
 import { locales, type Lang } from '@/i18n/ui';
@@ -81,6 +82,8 @@ const countLabel = (count: number) =>
       </p>
     </div>
   </section>
+
+  <GitHubRepos lang={lang} />
 </BaseLayout>
 
 <script>

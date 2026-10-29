@@ -142,6 +142,21 @@ const fr = {
   'project.next': 'Projet suivant',
   'project.previous': 'Projet précédent',
 
+  // GitHub ---------------------------------------------------------------
+  'github.eyebrow': 'Open source',
+  'github.title': 'Dépôts GitHub',
+  'github.lead':
+    'Une sélection de mes dépôts publics, récupérée automatiquement depuis l’API GitHub et mise en cache une heure.',
+  'github.profile': 'Voir mon profil GitHub',
+  'github.loading': 'Chargement des dépôts…',
+  'github.error':
+    'La liste des dépôts est momentanément indisponible. Réessayez plus tard ou consultez mon profil GitHub.',
+  'github.empty': 'Aucun dépôt public à afficher pour le moment.',
+  'github.noscript':
+    'Activez JavaScript pour afficher les dépôts, ou consultez directement mon profil',
+  'github.stars': 'étoiles',
+  'github.updated': 'Mis à jour le {date}',
+
   // Compétences ----------------------------------------------------------
   'skills.legend': 'Niveau',
   'skills.level.advanced': 'Avancé',
@@ -332,6 +347,20 @@ const en: Record<UIKey, string> = {
   'project.screenshotsNote': '[TO COMPLETE: add 2 to 4 screenshots with alt text.]',
   'project.next': 'Next project',
   'project.previous': 'Previous project',
+
+  // GitHub ---------------------------------------------------------------
+  'github.eyebrow': 'Open source',
+  'github.title': 'GitHub repositories',
+  'github.lead':
+    'A selection of my public repositories, fetched automatically from the GitHub API and cached for one hour.',
+  'github.profile': 'View my GitHub profile',
+  'github.loading': 'Loading repositories…',
+  'github.error':
+    'The repository list is temporarily unavailable. Try again later or visit my GitHub profile.',
+  'github.empty': 'No public repository to show yet.',
+  'github.noscript': 'Enable JavaScript to see the repositories, or visit my profile directly on',
+  'github.stars': 'stars',
+  'github.updated': 'Updated on {date}',
 
   // Compétences ----------------------------------------------------------
   'skills.legend': 'Level',

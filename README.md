@@ -6,8 +6,8 @@ Portfolio professionnel bilingue (FR/EN), rapide et optimisé pour le référenc
 [![Deploy](https://github.com/hosayni/portfolio/actions/workflows/deploy.yml/badge.svg)](https://github.com/hosayni/portfolio/actions/workflows/deploy.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-> **État du projet :** en construction — étape 3/10 (contenu, collections Astro, blog et pages légales).
-> L'API, les conteneurs, la CI/CD et la supervision sont ajoutés aux étapes suivantes (voir la [feuille de route](#feuille-de-route)).
+> **État du projet :** en construction — étape 4/10 (API Flask : santé, dépôts GitHub, contact).
+> Les conteneurs, la CI/CD et la supervision sont ajoutés aux étapes suivantes (voir la [feuille de route](#feuille-de-route)).
 
 ---
 
@@ -67,7 +67,10 @@ portfolio/
 │       ├── components/     # Header, Footer, cartes, formulaire, schémas
 │       ├── data/           # Compétences, parcours, navigation
 │       └── pages/[lang]/   # Routes FR/EN générées à partir des collections
-├── api/                    # Flask : API interne (à venir, étape 4)
+├── api/                    # Flask : santé, dépôts GitHub (cache), contact SMTP
+│   ├── app/                # factory, routes, services, validation, logs JSON
+│   ├── tests/              # Pytest (GitHub et SMTP simulés)
+│   └── wsgi.py             # point d'entrée Gunicorn
 ├── deploy/                 # Compose de production, Caddyfile (étape 7)
 ├── docs/
 │   ├── adr/                # Journal des décisions d'architecture
@@ -94,7 +97,9 @@ npm run dev
 ```
 
 Le site est servi sur <http://localhost:4321> et redirige vers `/fr/` ;
-`/en/` sert la version anglaise.
+`/en/` sert la version anglaise. En développement, Vite relaie `/api/*` vers
+Flask (`http://localhost:8000` par défaut) : lancer l'API en parallèle pour le
+formulaire de contact et la liste des dépôts GitHub.
 
 | Commande | Rôle |
 | --- | --- |
@@ -104,6 +109,27 @@ Le site est servi sur <http://localhost:4321> et redirige vers `/fr/` ;
 | `npm run check` | Vérification TypeScript et Astro |
 | `npm run lint` | ESLint |
 | `npm run format` | Prettier (écriture) |
+
+### API Flask (disponible)
+
+Prérequis : Python 3.12+ et un serveur SMTP pour les envois réels (facultatif en
+développement, où les e-mails sont seulement journalisés).
+
+```bash
+cd api
+python3 -m venv .venv
+.venv/bin/pip install -r requirements-dev.txt
+.venv/bin/flask --app wsgi run --port 8000
+```
+
+| Commande | Rôle |
+| --- | --- |
+| `flask --app wsgi run --port 8000` | API locale |
+| `.venv/bin/pytest` | Tests et couverture (seuil 80 %) |
+| `.venv/bin/ruff check .` | Lint Python |
+| `.venv/bin/ruff format --check .` | Format Python |
+
+Détails, endpoints et limites : [`api/README.md`](api/README.md).
 
 ### Stack complète (Docker)
 
@@ -141,9 +167,10 @@ avec des permissions `600`.
 
 ## Qualité et CI
 
-Chaque pull request déclenche : lint et build du frontend, `astro check`, tests
-Playwright, Ruff et Pytest avec couverture, Lighthouse CI et analyse de sécurité.
-La branche `main` est protégée : PR obligatoire et CI verte.
+En local, le frontend passe `astro check`, ESLint, Prettier et le build ; l'API
+passe Ruff, Pytest et un seuil de couverture de 80 %. À partir de l'étape 6,
+chaque pull request déclenchera en plus Playwright, Lighthouse CI et l'analyse
+de sécurité. La branche `main` est protégée : PR obligatoire et CI verte.
 
 ## Déploiement
 
@@ -156,7 +183,7 @@ sur le VPS → healthcheck → rollback automatique en cas d'échec.
 - [x] **1. Initialisation** — dépôt, conventions, structure, documentation de départ
 - [x] **2. Frontend** — Astro 5, TypeScript strict, Tailwind, layout SEO, i18n FR/EN, thème
 - [x] **3. Pages et contenu** — collections Astro, projets détaillés, compétences, parcours, blog, contact, pages légales
-- [ ] **4. API Flask** — endpoint santé, projets GitHub avec cache, contact validé et limité
+- [x] **4. API Flask** — endpoint santé, projets GitHub avec cache, contact validé et limité
 - [ ] **5. Docker** — images multi-stage, nginx, Compose de développement
 - [ ] **6. CI** — workflows, Dependabot, revue de PR
 - [ ] **7. CD et VPS** — publication ghcr.io, déploiement, Caddy, durcissement

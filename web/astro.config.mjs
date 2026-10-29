@@ -38,6 +38,16 @@ export default defineConfig({
   },
   vite: {
     plugins: [tailwindcss()],
+    server: {
+      // En développement, le front appelle /api/* sur son propre domaine :
+      // Vite relaie vers Flask. En production, Caddy fait le même routage.
+      proxy: {
+        '/api': {
+          target: process.env.API_PROXY_TARGET ?? 'http://localhost:8000',
+          changeOrigin: true,
+        },
+      },
+    },
   },
   integrations: [mdx()],
 });

@@ -1,0 +1,225 @@
+---
+import type { Lang } from '@/i18n/ui';
+import { useTranslations } from '@/i18n/utils';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+const profile = 'https://github.com/hosayni/';
+---
+
+<section class="border-t border-line py-16 md:py-20" aria-labelledby="github-title">
+  <div
+    class="container-page"
+    data-github-repos
+    data-locale={lang === 'en' ? 'en-GB' : 'fr-FR'}
+    data-loading={t('github.loading')}
+    data-error={t('github.error')}
+    data-empty={t('github.empty')}
+    data-stars={t('github.stars')}
+    data-updated={t('github.updated')}
+    data-demo={t('project.demo')}
+  >
+    <div class="flex flex-wrap items-end justify-between gap-6">
+      <div>
+        <p class="eyebrow">{t('github.eyebrow')}</p>
+        <h2 id="github-title" class="mt-4 text-h2 font-semibold">
+          {t('github.title')}
+        </h2>
+        <p class="mt-4 max-w-[60ch] text-muted">{t('github.lead')}</p>
+      </div>
+      <a
+        class="inline-flex items-center gap-2 text-sm font-medium underline decoration-1 underline-offset-4 hover:text-accent"
+        href={profile}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {t('github.profile')}
+        <span aria-hidden="true">↗</span>
+      </a>
+    </div>
+
+    <p
+      class="mt-8 font-mono text-xs text-muted"
+      data-github-status
+      role="status"
+      aria-live="polite"
+    ></p>
+
+    <noscript>
+      <p class="mt-8 text-sm text-muted">
+        {t('github.noscript')}
+        <a class="underline underline-offset-4" href={profile}>
+          GitHub
+        </a>
+        .
+      </p>
+    </noscript>
+
+    <ul class="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3" data-github-list hidden></ul>
+  </div>
+</section>
+
+<script>
+  interface GitHubProject {
+    name?: unknown;
+    description?: unknown;
+    languages?: unknown;
+    stars?: unknown;
+    updated_at?: unknown;
+    url?: unknown;
+    homepage?: unknown;
+  }
+
+  const root = document.querySelector<HTMLElement>('[data-github-repos]');
+
+  if (root) {
+    const list = root.querySelector<HTMLUListElement>('[data-github-list]');
+    const status = root.querySelector<HTMLElement>('[data-github-status]');
+    const labels = {
+      loading: root.dataset.loading ?? '',
+      error: root.dataset.error ?? '',
+      empty: root.dataset.empty ?? '',
+      stars: root.dataset.stars ?? '',
+      updated: root.dataset.updated ?? '',
+      demo: root.dataset.demo ?? '',
+    };
+    const locale = root.dataset.locale ?? 'fr-FR';
+    const dateFormatter = new Intl.DateTimeFormat(locale, {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+
+    const safeUrl = (raw: unknown): string | null => {
+      if (typeof raw !== 'string' || raw.trim() === '') return null;
+      try {
+        const url = new URL(raw);
+        return url.protocol === 'https:' ? url.toString() : null;
+      } catch {
+        return null;
+      }
+    };
+
+    const text = (value: unknown, fallback = ''): string =>
+      typeof value === 'string' ? value : fallback;
+
+    const formatDate = (raw: unknown): string | null => {
+      if (typeof raw !== 'string') return null;
+      const date = new Date(raw);
+      return Number.isNaN(date.getTime()) ? null : dateFormatter.format(date);
+    };
+
+    const element = <K extends keyof HTMLElementTagNameMap>(
+      tag: K,
+      className: string,
+      content?: string,
+    ): HTMLElementTagNameMap[K] => {
+      const node = document.createElement(tag);
+      node.className = className;
+      if (content !== undefined) node.textContent = content;
+      return node;
+    };
+
+    const render = (projects: GitHubProject[]) => {
+      if (!list) return;
+      const fragment = document.createDocumentFragment();
+
+      for (const project of projects) {
+        const name = text(project.name);
+        if (!name) continue;
+
+        const item = document.createElement('li');
+        const article = element('article', 'card h-full');
+
+        const header = element('div', 'flex items-start justify-between gap-4');
+        const title = element('h3', 'text-h3 font-semibold');
+        const link = element('a', 'hover:underline hover:decoration-1', name);
+        const url = safeUrl(project.url);
+        if (url) {
+          link.href = url;
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+        }
+        title.append(link);
+        header.append(title);
+        const arrow = element('span', 'card-arrow text-muted', '↗');
+        arrow.setAttribute('aria-hidden', 'true');
+        header.append(arrow);
+        article.append(header);
+
+        const description = text(project.description);
+        if (description) {
+          article.append(element('p', 'text-sm leading-relaxed text-muted', description));
+        }
+
+        const languages = Array.isArray(project.languages)
+          ? project.languages.filter((language): language is string => typeof language === 'string')
+          : [];
+        if (languages.length > 0) {
+          const tags = element('ul', 'flex flex-wrap gap-2');
+          for (const language of languages.slice(0, 4)) {
+            tags.append(element('li', 'tag', language));
+          }
+          article.append(tags);
+        }
+
+        const footer = element('div', 'mt-auto flex flex-wrap items-center gap-x-4 gap-y-2 pt-2');
+        const stars = typeof project.stars === 'number' ? project.stars : 0;
+        const starsLabel = element('span', 'font-mono text-xs text-muted', `★ ${stars}`);
+        starsLabel.setAttribute('aria-label', `${stars} ${labels.stars}`);
+        footer.append(starsLabel);
+
+        const updated = formatDate(project.updated_at);
+        if (updated) {
+          footer.append(
+            element(
+              'span',
+              'font-mono text-xs text-muted',
+              labels.updated.replace('{date}', updated),
+            ),
+          );
+        }
+
+        const homepage = safeUrl(project.homepage);
+        if (homepage) {
+          const demo = element('a', 'font-mono text-xs underline underline-offset-4', labels.demo);
+          demo.href = homepage;
+          demo.target = '_blank';
+          demo.rel = 'noopener noreferrer';
+          footer.append(demo);
+        }
+
+        article.append(footer);
+        item.append(article);
+        fragment.append(item);
+      }
+
+      list.replaceChildren(fragment);
+      list.hidden = false;
+      if (status) status.textContent = '';
+    };
+
+    if (status) status.textContent = labels.loading;
+
+    fetch('/api/projects/', { headers: { Accept: 'application/json' } })
+      .then((response) => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json() as Promise<{ projects?: unknown }>;
+      })
+      .then((data) => {
+        const projects = Array.isArray(data.projects) ? (data.projects as GitHubProject[]) : [];
+        if (projects.length === 0) {
+          if (status) status.textContent = labels.empty;
+          return;
+        }
+        render(projects);
+      })
+      .catch(() => {
+        if (status) status.textContent = labels.error;
+      });
+  }
+</script>
