@@ -159,7 +159,7 @@ jobs:
 
       - name: Vérifier l'accès Docker sur le VPS
         run: |
-          portfolio-ssh "docker info >/dev/null 2>&1 || { echo 'deploy n'a pas accès à Docker'; exit 1; }"
+          portfolio-ssh "docker info >/dev/null 2>&1 || { echo 'deploy has no Docker access'; exit 1; }"
 
       - name: Vérifier la configuration de production sur le VPS
         run: |
