@@ -852,3 +852,12 @@ Variables importantes :
 - `docs/DEPLOIEMENT.md` : guide de production
 - `docs/MONITORING.md` : supervision
 - `docs/CHECKLIST.md` : checklist de livraison
+
+## Plan d’action cette semaine
+
+- [ ] Remplacer les placeholders par du vrai contenu, au moins un projet complet.
+- [ ] Vérifier SSH, UFW et ports ouverts sur le VPS.
+- [ ] Brancher une sonde externe (UptimeRobot ou Healthchecks.io) et tester les alertes.
+- [ ] Tester volontairement un rollback.
+- [ ] Soumettre le sitemap à Google Search Console.
+- [ ] Vérifier les ports avec `sudo ss -tulpn` et confirmer qu’Uptime Kuma reste sur `127.0.0.1`.
