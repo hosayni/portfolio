@@ -6,9 +6,7 @@ Portfolio professionnel bilingue (FR/EN), rapide et optimisé pour le référenc
 [![Deploy](https://github.com/hosayni/portfolio/actions/workflows/deploy.yml/badge.svg)](https://github.com/hosayni/portfolio/actions/workflows/deploy.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-> **État du projet :** en construction — étape 7/10 (CD : publication ghcr.io,
-> déploiement SSH automatique, rollback et durcissement VPS documentés).
-> La supervision et la documentation finale sont ajoutées aux étapes suivantes.
+> **État du projet :** terminé — 10/10. Portfolio déployé, supervisé et documenté.
 
 ---
 
@@ -79,7 +77,9 @@ portfolio/
 ├── docs/
 │   ├── adr/                # Journal des décisions d'architecture
 │   ├── CI.md               # Workflow CI, seuils et politique de sécurité
-│   └── DEPLOIEMENT.md      # Mise en production (base, complétée étape 7/10)
+│   ├── DEPLOIEMENT.md      # Mise en production (étape 7)
+│   ├── MONITORING.md       # Supervision Uptime Kuma et procédure d'incident
+│   └── CHECKLIST.md        # Checklist de livraison (étape 10)
 ├── .github/
 │   ├── workflows/ci.yml    # lint, tests, e2e, Lighthouse, sécurité, CodeQL
 │   ├── scripts/            # vérification npm audit avec exceptions datées
@@ -252,7 +252,7 @@ automatique en cas d'échec.
 - [x] **7. CD et VPS** — publication ghcr.io, déploiement, Caddy, durcissement
 - [x] **8. SEO et performance** — JSON-LD, sitemap, RSS, Lighthouse ≥ 95
 - [x] **9. Monitoring** — Uptime Kuma, healthchecks, alertes
-- [ ] **10. Documentation** — guide de déploiement, checklist de livraison
+- [x] **10. Documentation** — guide de déploiement, checklist de livraison
 
 ## Licence
 

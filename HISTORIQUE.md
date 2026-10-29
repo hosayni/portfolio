@@ -684,3 +684,31 @@ README.md                             # statut étape 9
 - Les healthchecks Docker existants restent la première ligne de défense.
 - Une sonde externe gratuite peut compléter Uptime Kuma pour détecter une
   panne totale du VPS.
+
+## Étape 10 — Documentation finale et checklist de livraison
+
+### Résumé
+
+Finalisation de la documentation : checklist de livraison complète, mise à jour
+du README (état terminé, feuille de route complète), mise à jour de
+`HISTORIQUE.md`, référencement de `docs/MONITORING.md` et `docs/CHECKLIST.md`.
+
+### Fichiers
+
+```text
+docs/CHECKLIST.md              # checklist de livraison
+README.md                      # état terminé, roadmap complète
+HISTORIQUE.md                  # étape 10 consignée
+```
+
+### Vérifications finales
+
+- Documentation cohérente avec l’état réel du dépôt.
+- Toutes les étapes 1 à 10 sont marquées terminées.
+- Limites assumées documentées.
+
+### État final
+
+Projet livré : site Astro/Flask déployé sur VPS, supervisé, documenté, avec CI/CD,
+SEO, performance, sécurité et monitoring. Contenu rédactionnel à compléter selon
+les placeholders `[À COMPLÉTER]`.
