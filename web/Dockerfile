@@ -2,7 +2,7 @@
 # Site Astro : build Node, service statique nginx non-root.
 # Les versions sont figées pour rendre les builds reproductibles.
 # ---------------------------------------------------------------------------
-FROM node:22.22-alpine3.24 AS base
+FROM node:26.12-alpine3.24 AS base
 
 ENV CI=true \
     NPM_CONFIG_FUND=false \
