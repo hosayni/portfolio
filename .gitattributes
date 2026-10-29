@@ -1,0 +1,24 @@
+# Normalise les fins de ligne : LF partout dans le dépôt, quel que soit l'OS.
+* text=auto eol=lf
+
+# Scripts exécutés sur Linux / VPS : jamais de CRLF.
+*.sh      text eol=lf
+Dockerfile text eol=lf
+
+# Fichiers binaires : aucune transformation.
+*.png     binary
+*.jpg     binary
+*.jpeg    binary
+*.gif     binary
+*.webp    binary
+*.avif    binary
+*.ico     binary
+*.woff    binary
+*.woff2   binary
+*.pdf     binary
+
+# Les fichiers Markdown sont affichés en clair sur GitHub.
+*.md      text eol=lf
+
+# Les lockfiles sont générés : on les exclut du diff linguistique.
+package-lock.json linguist-generated=true
