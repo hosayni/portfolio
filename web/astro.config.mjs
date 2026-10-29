@@ -13,8 +13,8 @@ export default defineConfig({
   site,
   // URLs canoniques avec slash final : /fr/, /fr/projets/, etc.
   trailingSlash: 'always',
-  // La racine redirige vers le français. Astro génère une page de redirection
-  // statique (meta refresh + lien), servie par nginx sans configuration dédiée.
+  // La racine redirige vers le français. Astro génère une page de secours
+  // (meta refresh + lien) ; nginx et Caddy appliquent un vrai 301 HTTP.
   redirects: {
     '/': { status: 301, destination: '/fr/' },
   },

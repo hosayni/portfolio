@@ -5,7 +5,7 @@ Point d'entrée de la documentation technique du portfolio.
 | Document | Contenu |
 | --- | --- |
 | [adr/](adr/) | Journal des décisions d'architecture (ADR) |
-| [DEPLOIEMENT.md](DEPLOIEMENT.md) | Mise en production et rollback — *à venir (étape 10)* |
+| [DEPLOIEMENT.md](DEPLOIEMENT.md) | Mise en production et rollback — *base prête, complétée aux étapes 7 et 10* |
 
 ## Conventions
 

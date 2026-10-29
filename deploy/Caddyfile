@@ -1,0 +1,44 @@
+# ---------------------------------------------------------------------------
+# Reverse proxy de production.
+# Caddy termine le TLS (Let's Encrypt), redirige www vers le domaine principal,
+# puis route /api/* vers Flask et le reste vers nginx.
+# Les variables SITE_DOMAIN, WWW_DOMAIN et ACME_EMAIL viennent de deploy/.env.
+# ---------------------------------------------------------------------------
+{
+	admin off
+	email {$ACME_EMAIL}
+	servers {
+		protocols h1 h2 h3
+	}
+}
+
+{$WWW_DOMAIN} {
+	header -Server
+	redir https://{$SITE_DOMAIN}{uri} permanent
+}
+
+{$SITE_DOMAIN} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+		-Server
+	}
+
+	handle /api/* {
+		reverse_proxy api:8000
+	}
+
+	handle {
+		reverse_proxy web:8080
+	}
+
+	log {
+		output stdout
+		format json
+	}
+}

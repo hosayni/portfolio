@@ -1,0 +1,109 @@
+# ---------------------------------------------------------------------------
+# Production : images publiées sur ghcr.io par le workflow de déploiement.
+# Aucun port n'est publié pour web/api ; seul Caddy écoute sur 80/443.
+# L'API garde un accès sortant pour GitHub et SMTP.
+#
+# Utilisation (depuis deploy/) :
+#   cp .env.example .env && chmod 600 .env   # puis renseigner les secrets
+#   docker compose -f docker-compose.prod.yml pull
+#   docker compose -f docker-compose.prod.yml up -d
+# ---------------------------------------------------------------------------
+name: portfolio
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  web:
+    image: ghcr.io/${GHCR_OWNER:-hosayni}/portfolio-web:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    pull_policy: always
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - portfolio
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 128M
+
+  api:
+    image: ghcr.io/${GHCR_OWNER:-hosayni}/portfolio-api:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    pull_policy: always
+    env_file:
+      - .env
+    environment:
+      APP_ENV: production
+      TRUST_PROXY: "true"
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    networks:
+      - portfolio
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 256M
+
+  caddy:
+    image: caddy:2.11.7-alpine
+    restart: unless-stopped
+    pull_policy: always
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN:?SITE_DOMAIN est requis}
+      WWW_DOMAIN: ${WWW_DOMAIN:?WWW_DOMAIN est requis}
+      ACME_EMAIL: ${ACME_EMAIL:?ACME_EMAIL est requis}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      web:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - portfolio
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 128M
+
+networks:
+  portfolio:
+    driver: bridge
+
+volumes:
+  caddy_data:
+  caddy_config:

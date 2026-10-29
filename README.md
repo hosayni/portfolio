@@ -6,8 +6,8 @@ Portfolio professionnel bilingue (FR/EN), rapide et optimisé pour le référenc
 [![Deploy](https://github.com/hosayni/portfolio/actions/workflows/deploy.yml/badge.svg)](https://github.com/hosayni/portfolio/actions/workflows/deploy.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-> **État du projet :** en construction — étape 4/10 (API Flask : santé, dépôts GitHub, contact).
-> Les conteneurs, la CI/CD et la supervision sont ajoutés aux étapes suivantes (voir la [feuille de route](#feuille-de-route)).
+> **État du projet :** en construction — étape 5/10 (Docker : images non-root, nginx, Compose de développement et de production).
+> La CI/CD, le déploiement et la supervision sont ajoutés aux étapes suivantes (voir la [feuille de route](#feuille-de-route)).
 
 ---
 
@@ -61,20 +61,23 @@ Principes :
 ```text
 portfolio/
 ├── web/                    # Astro : site public (layout SEO, i18n, pages)
-│   └── src/
-│       ├── content/        # Projets, articles et pages légales (Markdown + Zod)
-│       ├── lib/            # Accès aux collections, dates, temps de lecture
-│       ├── components/     # Header, Footer, cartes, formulaire, schémas
-│       ├── data/           # Compétences, parcours, navigation
-│       └── pages/[lang]/   # Routes FR/EN générées à partir des collections
+│   ├── src/
+│   │   ├── content/        # Projets, articles et pages légales (Markdown + Zod)
+│   │   ├── lib/            # Accès aux collections, dates, temps de lecture
+│   │   ├── components/     # Header, Footer, cartes, formulaire, schémas
+│   │   ├── data/           # Compétences, parcours, navigation
+│   │   └── pages/[lang]/   # Routes FR/EN générées à partir des collections
+│   ├── nginx/              # Configuration nginx non-root (cache, en-têtes)
+│   └── Dockerfile          # Build Node → image statique nginx
 ├── api/                    # Flask : santé, dépôts GitHub (cache), contact SMTP
 │   ├── app/                # factory, routes, services, validation, logs JSON
 │   ├── tests/              # Pytest (GitHub et SMTP simulés)
+│   ├── Dockerfile          # venv → image Gunicorn non-root
 │   └── wsgi.py             # point d'entrée Gunicorn
-├── deploy/                 # Compose de production, Caddyfile (étape 7)
+├── deploy/                 # Compose de production, Caddyfile, .env.example
 ├── docs/
 │   ├── adr/                # Journal des décisions d'architecture
-│   └── DEPLOIEMENT.md      # Procédure de mise en production (étape 10)
+│   └── DEPLOIEMENT.md      # Mise en production (base, complétée étape 7/10)
 ├── .github/workflows/      # CI et CD (étapes 6 et 7)
 ├── HISTORIQUE.md           # Journal local de construction, étape par étape
 ├── .env.example            # Variables attendues (aucune valeur réelle)
@@ -131,29 +134,54 @@ python3 -m venv .venv
 
 Détails, endpoints et limites : [`api/README.md`](api/README.md).
 
-### Stack complète (Docker)
+### Stack complète (Docker, recommandée)
 
-> Disponible à partir de l'étape 5 (Dockerisation). Les commandes ci-dessous seront
-> alors la référence unique pour lancer le projet.
-
-Prérequis : Docker 24+, Docker Compose v2.
+Prérequis : Docker 24+ et Docker Compose v2.24+. Aucun Node ni Python local n'est
+nécessaire.
 
 ```bash
 git clone git@github.com:hosayni/portfolio.git
 cd portfolio
-cp .env.example .env      # puis renseigner les valeurs
+cp .env.example .env      # facultatif ; nécessaire pour GitHub/SMTP réels
 docker compose up --build
 ```
+
+`docker-compose.yml` construit les cibles de développement :
+
+- **web** : Astro avec rechargement à chaud ; les sources sont montées et Vite
+  relaie `/api` vers le service Flask.
+- **api** : Flask en mode debug avec rechargement à chaud ; `/api/health` sert
+  de healthcheck.
+- Les deux services ne sont publiés que sur `127.0.0.1`.
 
 | Service | URL locale |
 | --- | --- |
 | Site | <http://localhost:4321> |
 | API | <http://localhost:8000/api/health> |
 
+Le frontend appelle `/api/health/` (slash final) : c'est le chemin utilisé par
+le proxy de développement et par Caddy en production.
+
+```bash
+docker compose down       # arrêt
+docker compose down -v    # arrêt + suppression du volume node_modules
+```
+
+### Images de production
+
+Les Dockerfiles exposent une cible `runtime` : nginx non-root pour Astro,
+Gunicorn non-root pour Flask, avec `HEALTHCHECK`. Les images de production sont
+publiées sur `ghcr.io` et orchestrées par
+[`deploy/docker-compose.prod.yml`](deploy/docker-compose.prod.yml) : Caddy sur
+80/443, réseau privé, limites de ressources et systèmes de fichiers en lecture
+seule. La publication et le déploiement SSH sont traités à l'étape 7.
+
 ## Variables d'environnement
 
-Toutes les variables sont documentées dans [`.env.example`](.env.example).
-Les plus sensibles :
+Toutes les variables de développement sont documentées dans
+[`.env.example`](.env.example). La production utilise un modèle séparé,
+[`deploy/.env.example`](deploy/.env.example), à copier en `deploy/.env` avec des
+permissions `600`. Les plus sensibles :
 
 | Variable | Usage | Obligatoire |
 | --- | --- | --- |
@@ -168,15 +196,20 @@ avec des permissions `600`.
 ## Qualité et CI
 
 En local, le frontend passe `astro check`, ESLint, Prettier et le build ; l'API
-passe Ruff, Pytest et un seuil de couverture de 80 %. À partir de l'étape 6,
-chaque pull request déclenchera en plus Playwright, Lighthouse CI et l'analyse
-de sécurité. La branche `main` est protégée : PR obligatoire et CI verte.
+passe Ruff, Pytest et un seuil de couverture de 80 %. Les deux images Docker
+sont construites et testées (utilisateurs non-root, healthchecks, cache nginx,
+en-têtes de sécurité). À partir de l'étape 6, chaque pull request déclenchera en
+plus Playwright, Lighthouse CI et l'analyse de sécurité. La branche `main` est
+protégée : PR obligatoire et CI verte.
 
 ## Déploiement
 
-Procédure détaillée à l'étape 7/10 : [`docs/DEPLOIEMENT.md`](docs/DEPLOIEMENT.md).
-En résumé : push sur `main` → CI → images publiées sur `ghcr.io` → déploiement SSH
-sur le VPS → healthcheck → rollback automatique en cas d'échec.
+Le Compose de production et le Caddyfile sont prêts (étape 5). La procédure
+détaillée de mise en production, de publication `ghcr.io`, de déploiement SSH
+et de rollback est traitée à l'étape 7/10 :
+[`docs/DEPLOIEMENT.md`](docs/DEPLOIEMENT.md). En résumé : push sur `main` → CI →
+images publiées sur `ghcr.io` → déploiement sur le VPS → healthcheck → rollback
+automatique en cas d'échec.
 
 ## Feuille de route
 
@@ -184,7 +217,7 @@ sur le VPS → healthcheck → rollback automatique en cas d'échec.
 - [x] **2. Frontend** — Astro 5, TypeScript strict, Tailwind, layout SEO, i18n FR/EN, thème
 - [x] **3. Pages et contenu** — collections Astro, projets détaillés, compétences, parcours, blog, contact, pages légales
 - [x] **4. API Flask** — endpoint santé, projets GitHub avec cache, contact validé et limité
-- [ ] **5. Docker** — images multi-stage, nginx, Compose de développement
+- [x] **5. Docker** — images multi-stage non-root, nginx, Compose de développement et de production
 - [ ] **6. CI** — workflows, Dependabot, revue de PR
 - [ ] **7. CD et VPS** — publication ghcr.io, déploiement, Caddy, durcissement
 - [ ] **8. SEO et performance** — JSON-LD, sitemap, RSS, Lighthouse ≥ 95
