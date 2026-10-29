@@ -172,7 +172,7 @@ jobs:
 
       - name: Copier les fichiers de déploiement
         run: |
-          tar -C deploy -czf - docker-compose.prod.yml Caddyfile deploy.sh \
+          tar -C deploy -czf - docker-compose.prod.yml docker-compose.monitoring.yml Caddyfile deploy.sh \
             | portfolio-ssh "mkdir -p '$DEPLOY_DIR' && tar -C '$DEPLOY_DIR' -xzf -"
 
       - name: Déployer
