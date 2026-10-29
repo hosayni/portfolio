@@ -6,8 +6,8 @@ Portfolio professionnel bilingue (FR/EN), rapide et optimisé pour le référenc
 [![Deploy](https://github.com/hosayni/portfolio/actions/workflows/deploy.yml/badge.svg)](https://github.com/hosayni/portfolio/actions/workflows/deploy.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-> **État du projet :** en construction — étape 5/10 (Docker : images non-root, nginx, Compose de développement et de production).
-> La CI/CD, le déploiement et la supervision sont ajoutés aux étapes suivantes (voir la [feuille de route](#feuille-de-route)).
+> **État du projet :** en construction — étape 6/10 (CI : GitHub Actions, Playwright, Lighthouse CI, audits de sécurité et Dependabot).
+> Le déploiement et la supervision sont ajoutés aux étapes suivantes (voir la [feuille de route](#feuille-de-route)).
 
 ---
 
@@ -77,8 +77,13 @@ portfolio/
 ├── deploy/                 # Compose de production, Caddyfile, .env.example
 ├── docs/
 │   ├── adr/                # Journal des décisions d'architecture
+│   ├── CI.md               # Workflow CI, seuils et politique de sécurité
 │   └── DEPLOIEMENT.md      # Mise en production (base, complétée étape 7/10)
-├── .github/workflows/      # CI et CD (étapes 6 et 7)
+├── .github/
+│   ├── workflows/ci.yml    # lint, tests, e2e, Lighthouse, sécurité, CodeQL
+│   ├── scripts/            # vérification npm audit avec exceptions datées
+│   ├── security/           # liste des exceptions npm, justifiées
+│   └── dependabot.yml      # mises à jour npm, pip, Docker, actions
 ├── HISTORIQUE.md           # Journal local de construction, étape par étape
 ├── .env.example            # Variables attendues (aucune valeur réelle)
 ├── .editorconfig
@@ -111,7 +116,16 @@ formulaire de contact et la liste des dépôts GitHub.
 | `npm run preview` | Sert le build local |
 | `npm run check` | Vérification TypeScript et Astro |
 | `npm run lint` | ESLint |
+| `npm run test:e2e` | Tests Playwright sur le build (`astro preview`) |
 | `npm run format` | Prettier (écriture) |
+
+Les tests de bout en bout nécessitent un build et Chromium :
+
+```bash
+npx playwright install chromium   # une seule fois
+npm run build
+npm run test:e2e
+```
 
 ### API Flask (disponible)
 
@@ -195,12 +209,28 @@ avec des permissions `600`.
 
 ## Qualité et CI
 
-En local, le frontend passe `astro check`, ESLint, Prettier et le build ; l'API
-passe Ruff, Pytest et un seuil de couverture de 80 %. Les deux images Docker
-sont construites et testées (utilisateurs non-root, healthchecks, cache nginx,
-en-têtes de sécurité). À partir de l'étape 6, chaque pull request déclenchera en
-plus Playwright, Lighthouse CI et l'analyse de sécurité. La branche `main` est
-protégée : PR obligatoire et CI verte.
+Chaque pull request et chaque push hors `main` déclenche
+[`ci.yml`](.github/workflows/ci.yml), avec six jobs :
+
+| Job | Vérifications |
+| --- | --- |
+| `web` | npm ci, Prettier, ESLint, `astro check`, build, artefact `web-dist` |
+| `e2e` | Playwright sur le build : redirection FR, langue, filtre projets, formulaire |
+| `lighthouse` | performance, accessibilité, bonnes pratiques et SEO sur `/fr/` et `/en/` |
+| `api` | Ruff, format, Pytest et couverture ≥ 80 % |
+| `security` | `npm audit` filtré par exceptions datées, `pip-audit --strict` |
+| `codeql` | analyse statique JavaScript/TypeScript et Python |
+
+Les seuils Lighthouse sont bloquants à **95** pour l'accessibilité, les bonnes
+pratiques et le SEO. La performance est mesurée sur mobile, cinq fois par page,
+et deviendra bloquante à 95 à l'étape 8, après optimisation sur le runner dédié.
+Les exceptions npm (Astro 5 imposé) sont justifiées et expirent le 31 mars 2027.
+Dépendances, seuils et protection de branche sont détaillés dans
+[`docs/CI.md`](docs/CI.md).
+
+Dependabot surveille npm, pip, Docker, les Compose et les actions GitHub une
+fois par semaine. La branche `main` doit être protégée : PR obligatoire, CI
+verte et branches à jour avant fusion.
 
 ## Déploiement
 
@@ -218,7 +248,7 @@ automatique en cas d'échec.
 - [x] **3. Pages et contenu** — collections Astro, projets détaillés, compétences, parcours, blog, contact, pages légales
 - [x] **4. API Flask** — endpoint santé, projets GitHub avec cache, contact validé et limité
 - [x] **5. Docker** — images multi-stage non-root, nginx, Compose de développement et de production
-- [ ] **6. CI** — workflows, Dependabot, revue de PR
+- [x] **6. CI** — GitHub Actions, Playwright, Lighthouse CI, audits de sécurité, CodeQL, Dependabot
 - [ ] **7. CD et VPS** — publication ghcr.io, déploiement, Caddy, durcissement
 - [ ] **8. SEO et performance** — JSON-LD, sitemap, RSS, Lighthouse ≥ 95
 - [ ] **9. Monitoring** — Uptime Kuma, healthchecks, alertes

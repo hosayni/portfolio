@@ -5,6 +5,7 @@ Point d'entrée de la documentation technique du portfolio.
 | Document | Contenu |
 | --- | --- |
 | [adr/](adr/) | Journal des décisions d'architecture (ADR) |
+| [CI.md](CI.md) | Workflow d'intégration continue, seuils Lighthouse, sécurité et Dependabot |
 | [DEPLOIEMENT.md](DEPLOIEMENT.md) | Mise en production et rollback — *base prête, complétée aux étapes 7 et 10* |
 
 ## Conventions

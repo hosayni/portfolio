@@ -461,3 +461,112 @@ docs/
 - Aucune image n'a été poussée sur `ghcr.io` et aucun push Git n'a été effectué.
 
 
+---
+
+## Étape 6 — Intégration continue : tests, Lighthouse, sécurité et Dependabot
+
+- **Date :** 2026-10-29
+- **Commit :** `0c12a2a` — `feat(ci): ajoute l'intégration continue, Playwright et Lighthouse`
+- **Branche :** `feature/init`
+
+### Objectif
+
+Automatiser les contrôles sur chaque pull request : qualité du frontend, tests de
+bout en bout, build, budgets Lighthouse, tests et couverture de l'API, audit des
+dépendances, analyse statique CodeQL et mises à jour Dependabot. Aucun
+déploiement à cette étape.
+
+### Décisions
+
+- **Workflow unique `ci.yml`** avec six jobs : `web`, `e2e`, `lighthouse`,
+  `api`, `security` et `codeql` (matrice JavaScript/TypeScript + Python).
+  `web`, `api`, `security` et `codeql` sont indépendants ; `e2e` et `lighthouse`
+  consomment l'artefact `web-dist` produit par `web`.
+- **Déclencheurs** : pull requests, push hors `main`, lancement manuel.
+  `concurrency` annule les exécutions obsolètes de la même référence.
+- **Moindre privilège** : `contents: read` par défaut ; `security-events: write`
+  uniquement pour CodeQL. Aucun secret n'est nécessaire.
+- **Cache** : npm via `setup-node`, pip via `setup-python`. Les rapports
+  Playwright et Lighthouse sont conservés 7 jours en artefact.
+- **Playwright sur le build** : `astro preview` sert `dist/` (port 4321), pas le
+  serveur de développement. Quatre parcours : redirection `/` → `/fr/`,
+  changement de langue, filtre projets, validation du formulaire. Chromium seul
+  pour maîtriser le temps de CI.
+- **Lighthouse CI** : `/fr/` et `/en/`, 5 runs par page, médiane. Accessibilité,
+  bonnes pratiques et SEO sont bloquants à 95. La performance est mesurée à 95
+  mais reste en **avertissement** jusqu'à l'étape 8 : sur la machine locale
+  partagée (charge moyenne 7 pour 4 cœurs), les scores oscillaient de 80 à 97.
+  Le seuil deviendra bloquant après optimisation sur le runner dédié.
+- **Audit npm avec politique** : plutôt que d'ignorer `npm audit` ou d'accepter
+  un rouge permanent, un script Node applique une liste d'exceptions datées.
+  Toute vulnérabilité haute/critique absente, expirée ou dont la gravité change
+  fait échouer la CI. Les vulnérabilités basses et modérées restent visibles.
+- **Exceptions Astro 5** : les sept avis hauts/critiques concernent Astro 5
+  (XSS, SSRF, RCE AVIF) et ses dépendances `sharp`/`zod`. Le site est statique,
+  sans entrée utilisateur rendue, sans image distante ni serveur de
+  développement exposé. Justifications dans
+  `.github/security/npm-audit-allowlist.json`, expiration **2027-03-31**.
+- **pip-audit** ajouté aux dépendances de développement, exécuté avec
+  `--strict` ; aucune vulnérabilité connue au moment de l'étape.
+- **CodeQL** en `build-mode: none` et requêtes `security-and-quality`. Le
+  téléversement SARIF est désactivé pour les PR Dependabot et les forks, dont le
+  jeton est en lecture seule ; l'analyse continue de tourner.
+- **Dependabot** hebdomadaire, groupé par écosystème : npm, pip, images Docker
+  web/api, Compose dev/prod et actions GitHub. Les montées majeures d'Astro et
+  `@astrojs/*` sont ignorées pour respecter la contrainte Astro 5.
+- **Protection de branche** documentée mais à appliquer dans l'interface
+  GitHub : PR obligatoire, checks requis, branches à jour, pas de force push.
+
+### Fichiers
+
+```text
+.github/
+├── workflows/ci.yml             # web, e2e, lighthouse, api, security, codeql
+├── dependabot.yml               # npm, pip, docker, compose, actions
+├── scripts/check-npm-audit.mjs  # politique d'exceptions npm datées
+└── security/npm-audit-allowlist.json
+
+web/
+├── playwright.config.ts         # preview sur 4321, artefacts CI
+├── e2e/portfolio.spec.ts        # 4 parcours critiques
+└── lighthouserc.json            # 2 pages × 5 runs, seuils
+
+api/requirements-dev.txt         # + pip-audit 2.10.1
+web/package.json                 # + @playwright/test 1.64.1
+docs/CI.md                       # procédure, seuils, sécurité, branche main
+```
+
+### Vérifications
+
+```text
+✔ npm ci (copie propre)              → 533 paquets, esbuild et sharp fonctionnels
+✔ npm run format:check               → conforme
+✔ npm run lint                       → propre
+✔ npm run check                      → 0 erreur, 0 warning (37 fichiers)
+✔ npm run build                      → 27 pages
+✔ npm run test:e2e                   → 4 tests réussis (7,1 s)
+✔ Lighthouse CI                      → 10 runs, accessibilité/BP/SEO 100,
+                                       performance 80–97 (médiane 89, charge locale)
+                                       assertions : avertissements, aucun échec
+✔ Ruff check + format                → propres
+✔ Pytest                             → 55 tests, 94,85 % de couverture
+✔ npm audit (politique)              → 7 exceptions acceptées, 0 bloquant
+✔ npm audit, exception expirée       → échec attendu (code 1)
+✔ npm audit, avis critique retiré    → échec attendu (code 1)
+✔ pip-audit -r requirements.txt      → aucune vulnérabilité connue
+✔ actionlint                         → aucun problème
+✔ YAML dependabot/CI                → parse sans erreur
+```
+
+### Notes
+
+- Le workflow n'a pas encore tourné sur GitHub : aucun push n'a été effectué.
+  Les commandes ont été rejouées localement, y compris Playwright et Lighthouse.
+- La performance Lighthouse reste un avertissement jusqu'à l'étape 8. La charge
+  de la machine de développement fausse les mesures ; le runner GitHub dédié
+  donnera une référence plus stable.
+- Les exceptions npm expirent le 31 mars 2027 : mettre à jour Astro ou renouveler
+  l'analyse avant cette date.
+- La protection de branche ne peut pas être versionnée dans le dépôt ; la
+  checklist est dans `docs/CI.md`.
+- Aucun secret, aucune image et aucun push : `deploy.yml` arrive à l'étape 7.
