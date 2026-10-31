@@ -40,3 +40,7 @@ www.hosayni.com {
 status.hosayni.com {
     reverse_proxy uptime-kuma:3001
 }
+
+cdn.hosayni.com {
+    respond 404
+}
