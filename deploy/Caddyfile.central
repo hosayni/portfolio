@@ -1,0 +1,42 @@
+# ---------------------------------------------------------------------------
+# Reverse proxy central : un seul Caddy pour tout le VPS.
+# À copier dans /opt/caddy/Caddyfile.
+# ---------------------------------------------------------------------------
+{
+    admin off
+    email {$ACME_EMAIL}
+}
+
+hosayni.com {
+    encode zstd gzip
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+        -Server
+    }
+
+    handle /api/* {
+        reverse_proxy portfolio-api:8000
+    }
+
+    handle {
+        reverse_proxy portfolio-web:8080
+    }
+
+    log {
+        output stdout
+        format json
+    }
+}
+
+www.hosayni.com {
+    redir https://hosayni.com{uri} permanent
+}
+
+status.hosayni.com {
+    reverse_proxy uptime-kuma:3001
+}
