@@ -300,3 +300,45 @@ de secrets, jamais dans Git.
 
 Les logs du dernier déploiement sont disponibles dans l'artefact GitHub Actions
 et sur le VPS via `docker compose logs`.
+## Reverse proxy central (Caddy + sslh)
+
+Pour héberger plusieurs projets sur le même VPS, Caddy peut être sorti du
+Compose portfolio et centralisé dans `/opt/caddy`.
+
+### Principe
+
+- `sslh` écoute sur `0.0.0.0:443`
+- Caddy écoute sur `127.0.0.1:8444`
+- les projets sont connectés au réseau Docker partagé `proxy`
+- Caddy route selon le domaine
+
+### Fichiers concernés
+
+- `deploy/docker-compose.caddy.yml`
+- `deploy/Caddyfile.central`
+- `deploy/docker-compose.prod.yml` (sans Caddy, avec réseau `proxy`)
+
+### Installation
+
+```bash
+docker network create proxy
+sudo install -d -o deploy -g deploy -m 750 /opt/caddy
+# copier docker-compose.caddy.yml et Caddyfile.central vers /opt/caddy
+cd /opt/caddy
+docker compose up -d
+```
+
+### Migration du portfolio
+
+```bash
+cd /opt/portfolio
+docker compose -f docker-compose.prod.yml down
+docker compose -f docker-compose.prod.yml up -d
+```
+
+### Vérification
+
+```bash
+curl -fsS https://hosayni.com/api/health/
+curl -fsSI https://hosayni.com/fr/
+```

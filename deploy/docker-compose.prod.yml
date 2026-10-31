@@ -13,7 +13,7 @@ x-logging: &default-logging
     max-file: "3"
 
 services:
-  web:
+  portfolio-web:
     image: ghcr.io/${GHCR_OWNER:-hosayni}/portfolio-web:${IMAGE_TAG:-latest}
     restart: unless-stopped
     pull_policy: always
@@ -40,7 +40,7 @@ services:
           cpus: "0.50"
           memory: 128M
 
-  api:
+  portfolio-api:
     image: ghcr.io/${GHCR_OWNER:-hosayni}/portfolio-api:${IMAGE_TAG:-latest}
     restart: unless-stopped
     pull_policy: always

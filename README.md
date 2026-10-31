@@ -73,7 +73,7 @@ portfolio/
 │   ├── tests/              # Pytest (GitHub et SMTP simulés)
 │   ├── Dockerfile          # venv → image Gunicorn non-root
 │   └── wsgi.py             # point d'entrée Gunicorn
-├── deploy/                 # Compose de production, Caddyfile, .env.example
+├── deploy/                 # Compose prod/monitoring, Caddyfile, Caddy central, .env.example, deploy.sh
 ├── docs/
 │   ├── adr/                # Journal des décisions d'architecture
 │   ├── CI.md               # Workflow CI, seuils et politique de sécurité
@@ -241,6 +241,21 @@ documentée dans [`docs/DEPLOIEMENT.md`](docs/DEPLOIEMENT.md) et
 [`docs/MONITORING.md`](docs/MONITORING.md). En résumé : push sur `main` → CI →
 images publiées sur `ghcr.io` → déploiement sur le VPS → healthcheck → rollback
 automatique en cas d'échec. La disponibilité est surveillée par Uptime Kuma.
+
+Le reverse proxy peut être centralisé avec `deploy/docker-compose.caddy.yml` et
+`deploy/Caddyfile.central`, derrière `sslh` sur le port 443. Voir
+`docs/DEPLOIEMENT.md`.
+
+## Reverse proxy central
+
+Un seul Caddy peut servir plusieurs projets sur le même VPS. Après chaque
+déploiement ou ajout de projet, redémarrer Caddy :
+
+```bash
+docker compose -f /opt/caddy/docker-compose.yml restart caddy
+```
+
+Cette commande doit être ajoutée au script de déploiement de chaque projet.
 
 ## Supervision
 
