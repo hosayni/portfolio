@@ -94,6 +94,13 @@ if ! IMAGE_TAG="$NEW_TAG" "${COMPOSE[@]}" up -d --remove-orphans --wait --wait-t
   fail_and_rollback "échec du démarrage des conteneurs ($NEW_TAG)"
 fi
 
+# Recharger le reverse proxy central, qui peut garder en cache les anciennes
+# adresses IP des conteneurs recréés.
+if [[ -f /opt/caddy/docker-compose.yml ]]; then
+  docker compose -f /opt/caddy/docker-compose.yml restart caddy >/dev/null 2>&1 || true
+  sleep 5
+fi
+
 if ! wait_http; then
   fail_and_rollback "les healthchecks publics ont échoué ($NEW_TAG)"
 fi
