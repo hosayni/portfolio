@@ -246,6 +246,17 @@ Le reverse proxy peut être centralisé avec `deploy/docker-compose.caddy.yml` e
 `deploy/Caddyfile.central`, derrière `sslh` sur le port 443. Voir
 `docs/DEPLOIEMENT.md`.
 
+## Reverse proxy central
+
+Un seul Caddy peut servir plusieurs projets sur le même VPS. Après chaque
+déploiement ou ajout de projet, redémarrer Caddy :
+
+```bash
+docker compose -f /opt/caddy/docker-compose.yml restart caddy
+```
+
+Cette commande doit être ajoutée au script de déploiement de chaque projet.
+
 ## Supervision
 
 La production est surveillée par Uptime Kuma, exposé uniquement en local sur le
