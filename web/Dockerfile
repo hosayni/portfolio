@@ -2,7 +2,7 @@
 # Site Astro : build Node, service statique nginx non-root.
 # Les versions sont figées pour rendre les builds reproductibles.
 # ---------------------------------------------------------------------------
-FROM node:22.22-alpine3.24 AS base
+FROM node:26.13-alpine3.24 AS base
 
 ENV CI=true \
     NPM_CONFIG_FUND=false \
@@ -41,7 +41,7 @@ ENV SITE_URL=$SITE_URL \
 
 RUN npm run build
 
-FROM nginx:1.30.6-alpine3.24 AS runtime
+FROM nginx:1.31.8-alpine3.24 AS runtime
 
 ENV NGINX_ENTRYPOINT_QUIET_LOGS=1
 
