@@ -2,7 +2,7 @@
 # API Flask : dépendances installées dans un venv, puis copiées dans une image
 # d'exécution minimale. Gunicorn tourne avec un utilisateur non-root.
 # ---------------------------------------------------------------------------
-FROM python:3.12.16-slim-trixie AS builder
+FROM python:3.15.0-slim-trixie AS builder
 
 ENV PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
@@ -38,7 +38,7 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
 CMD ["flask", "--app", "wsgi", "run", "--host", "0.0.0.0", "--port", "8000", "--debug"]
 
 # Cible de production : uniquement le venv, l'application et Gunicorn.
-FROM python:3.12.16-slim-trixie AS runtime
+FROM python:3.15.0-slim-trixie AS runtime
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
